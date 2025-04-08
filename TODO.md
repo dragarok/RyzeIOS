@@ -6,21 +6,21 @@ Ryze is an iOS application designed to help users break free from fear-based thi
 ## Development Roadmap
 
 ### Version 0.1: Foundation & Core Models
-- [ ] **Data Models**
-  - [ ] Create `Thought` model
+- [x] **Data Models**
+  - [x] Create `Thought` model
     - Properties: id, question, createdAt, outcomes, expectedOutcome, deadline, actualOutcome, isResolved
-  - [ ] Create `Outcome` model
+  - [x] Create `Outcome` model
     - Properties: id, type (enum: worst, worse, okay, good, better, best), description
-  - [ ] Implement Core Data persistence layer
-  - [ ] Design model relationships for future extensibility
-- [ ] **Basic Navigation**
-  - [ ] Implement TabView with main navigation structure
+  - [x] Implement persistence layer (JSON-based)
+  - [x] Design model relationships for future extensibility
+- [x] **Basic Navigation**
+  - [x] Implement TabView with main navigation structure
     - Dashboard tab
     - New Thought tab (with prominent + button)
     - History tab
     - Settings tab
-  - [ ] Add placeholder screens for each tab
-  - [ ] Ensure dark/light mode compatibility
+  - [x] Add placeholder screens for each tab
+  - [x] Ensure dark/light mode compatibility
 
 **Deliverable**: App with functioning navigation and data model foundation
 
@@ -155,13 +155,13 @@ Ryze is an iOS application designed to help users break free from fear-based thi
 
 ## Technical Considerations
 
-- [ ] **Extensibility Planning**
-  - [ ] Ensure data models can accommodate future changes
-  - [ ] Use protocols and interfaces for flexibility
-  - [ ] Document extension points
+- [x] **Extensibility Planning**
+  - [x] Ensure data models can accommodate future changes
+  - [x] Use protocols and interfaces for flexibility
+  - [x] Document extension points
 
-- [ ] **Architecture Decisions**
-  - [ ] Follow MVVM or similar architecture pattern
-  - [ ] Use SwiftUI for UI components
-  - [ ] Implement dependency injection for testability
-  - [ ] Design for offline-first functionalitys
+- [x] **Architecture Decisions**
+  - [x] Follow MVVM or similar architecture pattern
+  - [x] Use SwiftUI for UI components
+  - [x] Implement dependency injection for testability
+  - [x] Design for offline-first functionality
