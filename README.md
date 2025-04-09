@@ -45,6 +45,33 @@ We believe your thoughts are deeply personal. By default, all your data stays on
 
 Ryze is currently in early development. See [TODO.md](./TODO.md) for the current roadmap and progress.
 
+## Project Structure
+
+### Architecture
+- **MVVM Pattern**: The app follows the Model-View-ViewModel architecture pattern
+- **SwiftData**: Uses SwiftData for persistence (not Core Data as originally planned)
+- **SwiftUI**: Built entirely with SwiftUI for modern UI development
+
+### Key Components
+- **Models/**: Contains data models and storage logic
+  - `Models.swift`: Core data models (Thought, Outcome)
+  - `DataStore.swift`: Data persistence layer using SwiftData
+  - `ThoughtViewModel.swift`: View model managing thought data and user interactions
+- **Views/**: UI components organized by function
+  - `NewThoughtView.swift`: Form for creating new thoughts
+  - `ThoughtListView.swift`: History of all thoughts
+  - `ThoughtDetailView.swift`: Detailed view of a specific thought
+  - `DashboardView.swift`: Analytics and insights
+  - `SettingsView.swift`: App configuration
+- **ContentView.swift**: Main container view with tab navigation
+- **RyzeApp.swift**: App entry point
+
+### Navigation Flow
+- Tab-based navigation with automatic sheet presentation for new thoughts
+- Dashboard serves as the home screen
+- "New Thought" tab automatically triggers the thought creation form
+- History tab shows all past thoughts with resolution status
+
 ## Design Philosophy
 
 Ryze embraces a zen-like minimalist design approach:
