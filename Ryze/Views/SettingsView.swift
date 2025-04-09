@@ -8,10 +8,17 @@
 import SwiftUI
 
 struct SettingsView: View {
+    // Environment objects
+    @EnvironmentObject private var thoughtViewModel: ThoughtViewModel
+    
     // Settings state
     @AppStorage("useBiometricAuth") private var useBiometricAuth = false
     @AppStorage("notificationsEnabled") private var notificationsEnabled = true
     @AppStorage("reminderTime") private var reminderTime = 3600.0 // Default 1 hour before deadline
+    
+    // State for test notification
+    @State private var showTestNotificationSheet = false
+    @State private var selectedTestThought: Thought? = nil
     
     // App info
     private let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
@@ -47,8 +54,26 @@ struct SettingsView: View {
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
+                        
+                        Button(action: {
+                            showTestNotificationSheet = true
+                        }) {
+                            Label("Test Notification", systemImage: "bell.badge")
+                        }
+                        .padding(.vertical, 8)
                     }
                 }
+                
+                // Developer section (visible only in debug builds)
+                #if DEBUG
+                Section("Developer") {
+                    Button(action: {
+                        showTestNotificationSheet = true
+                    }) {
+                        Label("Test Full-Screen Notification", systemImage: "bell.fill")
+                    }
+                }
+                #endif
                 
                 // About section
                 Section("About") {
@@ -71,6 +96,56 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
+            .sheet(isPresented: $showTestNotificationSheet) {
+                selectThoughtForTestView
+            }
+        }
+    }
+    
+    // MARK: - Test Notification View
+    
+    private var selectThoughtForTestView: some View {
+        NavigationView {
+            List {
+                ForEach(thoughtViewModel.activeThoughts) { thought in
+                    Button(action: {
+                        selectedTestThought = thought
+                        showTestNotificationSheet = false
+                        // Show the test notification after a short delay
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            NotificationManager.shared.presentFullScreenNotification(for: thought)
+                        }
+                    }) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(thought.question)
+                                .font(.headline)
+                                .lineLimit(1)
+                            
+                            if let deadline = thought.deadline {
+                                Text("Deadline: \(deadline.formatted(date: .abbreviated, time: .shortened))")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+                
+                if thoughtViewModel.activeThoughts.isEmpty {
+                    Text("No active thoughts available to test")
+                        .foregroundColor(.secondary)
+                        .padding()
+                }
+            }
+            .navigationTitle("Select a Thought")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Cancel") {
+                        showTestNotificationSheet = false
+                    }
+                }
+            }
         }
     }
     
@@ -143,4 +218,5 @@ struct SettingsView: View {
 
 #Preview {
     SettingsView()
+        .environmentObject(ThoughtViewModel(dataStore: DataStore()))
 }

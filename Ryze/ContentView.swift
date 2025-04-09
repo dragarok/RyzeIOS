@@ -9,8 +9,8 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-    // Main view model shared across the app
-    @StateObject private var thoughtViewModel = ThoughtViewModel(dataStore: DataStore())
+    // Main view model injected from the app
+    @EnvironmentObject private var thoughtViewModel: ThoughtViewModel
     
     // For controlling the new thought sheet
     @State private var showingNewThought = false
@@ -69,4 +69,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
+        .environmentObject(ThoughtViewModel(dataStore: DataStore()))
 }

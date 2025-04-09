@@ -48,14 +48,14 @@ Ryze is an iOS application designed to help users break free from fear-based thi
 **Deliverable**: Ability to view saved thoughts and their details ✅
 
 ### Version 0.4: Local Notifications
-- [ ] **Notification System**
-  - [ ] Set up notification permissions and handling
-  - [ ] Create deadline-based notifications
-  - [ ] Implement full-screen outcome collection view
-  - [ ] Allow deferring to a later date
-  - [ ] Enable collecting actual outcome
+- [x] **Notification System**
+  - [x] Set up notification permissions and handling
+  - [x] Create deadline-based notifications
+  - [x] Implement full-screen outcome collection view
+  - [x] Allow deferring to a later date
+  - [x] Enable collecting actual outcome
 
-**Deliverable**: Working notification system for deadlines with outcome recording
+**Deliverable**: Working notification system for deadlines with outcome recording ✅
 
 ### Version 0.5: Basic Dashboard & Analytics
 - [x] **Dashboard Implementation**

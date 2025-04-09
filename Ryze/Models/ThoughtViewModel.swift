@@ -71,6 +71,11 @@ class ThoughtViewModel: ObservableObject {
         // Save the thought
         dataStore.saveThought(thought)
         
+        // Schedule a notification for the thought's deadline
+        if let deadline = thought.deadline {
+            NotificationManager.shared.scheduleDeadlineNotification(for: thought)
+        }
+        
         // Reset the form
         resetForm()
         
@@ -85,12 +90,30 @@ class ThoughtViewModel: ObservableObject {
         thought.isResolved = true
         dataStore.updateThought(thought)
         
+        // Cancel notification since the thought is now resolved
+        NotificationManager.shared.cancelNotification(for: thought)
+        
+        Task {
+            await loadThoughts()
+        }
+    }
+    
+    func updateThoughtDeadline(_ thought: Thought, newDeadline: Date) {
+        thought.deadline = newDeadline
+        dataStore.updateThought(thought)
+        
+        // Reschedule the notification with the new deadline
+        NotificationManager.shared.scheduleDeadlineNotification(for: thought)
+        
         Task {
             await loadThoughts()
         }
     }
     
     func deleteThought(_ thought: Thought) {
+        // Cancel notification before deleting the thought
+        NotificationManager.shared.cancelNotification(for: thought)
+        
         dataStore.deleteThought(thought)
         
         Task {
