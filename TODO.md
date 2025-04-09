@@ -6,45 +6,46 @@ Ryze is an iOS application designed to help users break free from fear-based thi
 ## Development Roadmap
 
 ### Version 0.1: Foundation & Core Models
-- [ ] **Data Models**
-  - [ ] Create `Thought` model
+- [x] **Data Models**
+  - [x] Create `Thought` model
     - Properties: id, question, createdAt, outcomes, expectedOutcome, deadline, actualOutcome, isResolved
-  - [ ] Create `Outcome` model
+  - [x] Create `Outcome` model
     - Properties: id, type (enum: worst, worse, okay, good, better, best), description
-  - [ ] Implement Core Data persistence layer
-  - [ ] Design model relationships for future extensibility
-- [ ] **Basic Navigation**
-  - [ ] Implement TabView with main navigation structure
+  - [x] Implement ~~Core Data~~ SwiftData persistence layer
+  - [x] Design model relationships for future extensibility
+- [x] **Basic Navigation**
+  - [x] Implement TabView with main navigation structure
     - Dashboard tab
     - New Thought tab (with prominent + button)
     - History tab
     - Settings tab
-  - [ ] Add placeholder screens for each tab
-  - [ ] Ensure dark/light mode compatibility
+  - [x] Add placeholder screens for each tab
+  - [x] Ensure dark/light mode compatibility
 
-**Deliverable**: App with functioning navigation and data model foundation
+**Deliverable**: App with functioning navigation and data model foundation ✅
 
 ### Version 0.2: Thought Creation Flow
-- [ ] **ThoughtCreationView**
-  - [ ] Implement "New Thought" screen with thought input field
-  - [ ] Add outcome spectrum input (worst to best) with predefined categories
-  - [ ] Allow skipping certain outcomes
-  - [ ] Create UI for selecting expected outcome
-  - [ ] Add deadline selection with DatePicker
-  - [ ] Implement basic save functionality to persistence layer
+- [x] **ThoughtCreationView**
+  - [x] Implement "New Thought" screen with thought input field
+  - [x] Add outcome spectrum input (worst to best) with predefined categories
+  - [x] Allow skipping certain outcomes
+  - [x] Create UI for selecting expected outcome
+  - [x] Add deadline selection with DatePicker
+  - [x] Implement basic save functionality to persistence layer
 
-**Deliverable**: Ability to create and save thoughts with outcomes and deadlines
+**Deliverable**: Ability to create and save thoughts with outcomes and deadlines ✅
 
 ### Version 0.3: Thought Listing & Detail View
-- [ ] **History Tab & ThoughtDetailView**
-  - [ ] Create History tab with list of saved thoughts
-  - [ ] Implement ThoughtDetailView to display saved thought details
-  - [ ] Add ability to see outcome spectrum and expected outcome
-  - [ ] Highlight expected and actual outcomes (if resolved)
-  - [ ] Show deadline information
-  - [ ] Include basic filtering/sorting options
+- [x] **History Tab & ThoughtDetailView**
+  - [x] Create History tab with list of saved thoughts
+  - [x] Implement ThoughtDetailView to display saved thought details
+  - [x] Add ability to see outcome spectrum and expected outcome
+  - [x] Highlight expected and actual outcomes (if resolved)
+  - [x] Show deadline information
+  - [x] Include basic filtering/sorting options
 
-**Deliverable**: Ability to view saved thoughts and their details
+**Deliverable**: Ability to view saved thoughts and their details ✅
+**Deliverable**: Ability to view saved thoughts and their details ✅
 
 ### Version 0.4: Local Notifications
 - [ ] **Notification System**
@@ -57,17 +58,24 @@ Ryze is an iOS application designed to help users break free from fear-based thi
 **Deliverable**: Working notification system for deadlines with outcome recording
 
 ### Version 0.5: Basic Dashboard & Analytics
-- [ ] **Dashboard Implementation**
-  - [ ] Implement simple Dashboard with key metrics
-  - [ ] Show count of resolved vs. unresolved thoughts
-  - [ ] Create basic chart for expected vs. actual outcomes
-  - [ ] Implement basic metrics display
+- [x] **Dashboard Implementation**
+  - [x] Implement simple Dashboard with key metrics
+  - [x] Show count of resolved vs. unresolved thoughts
+  - [x] Create basic chart for expected vs. actual outcomes
+  - [x] Implement basic metrics display
     - Percentage of worst-case expectations vs. actual outcomes
     - Distribution of actual outcomes across spectrum
-  - [ ] Add simple insights based on user patterns
-  - [ ] Implement refresh mechanism for updated data
+  - [x] Add simple insights based on user patterns
+  - [x] Implement refresh mechanism for updated data
+**Deliverable**: Functioning dashboard with basic insights ✅
 
-**Deliverable**: Functioning dashboard with basic insights
+### Version 0.5.1: UI/UX Improvements
+- [x] **User Experience Fixes**
+  - [x] Fix "New Thought" tab to automatically open the form when tapped
+  - [x] Implement tab-based navigation that properly handles the New Thought form
+  - [x] Ensure proper tab return behavior after creating new thought
+
+**Deliverable**: Improved user experience with intuitive navigation ✅
 
 ### Version 0.6: Security & Privacy Features
 - [ ] **Privacy & Security**
