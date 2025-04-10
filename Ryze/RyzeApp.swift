@@ -13,6 +13,9 @@ struct RyzeApp: App {
     // Initialize the notification manager
     @StateObject private var notificationManager = NotificationManager.shared
     
+    // Initialize the authentication manager
+    @StateObject private var authManager = AuthenticationManager.shared
+    
     // Create a shared view model instance
     @StateObject private var thoughtViewModel: ThoughtViewModel
     
@@ -24,6 +27,9 @@ struct RyzeApp: App {
         // Create view model with the data store
         let viewModel = ThoughtViewModel(dataStore: dataStore)
         _thoughtViewModel = StateObject(wrappedValue: viewModel)
+        
+        // Detect available biometric authentication types
+        authManager.detectBiometricType()
     }
     
     var body: some Scene {
@@ -31,6 +37,7 @@ struct RyzeApp: App {
             ContentView()
                 .environmentObject(thoughtViewModel)
                 .withNotifications() // Add notification handling
+                .withAuthentication() // Add authentication handling
                 .onAppear {
                     // Request notification permissions when the app launches
                     notificationManager.requestAuthorization()

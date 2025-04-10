@@ -72,7 +72,7 @@ class ThoughtViewModel: ObservableObject {
         dataStore.saveThought(thought)
         
         // Schedule a notification for the thought's deadline
-        if let deadline = thought.deadline {
+        if thought.deadline != nil {
             NotificationManager.shared.scheduleDeadlineNotification(for: thought)
         }
         
