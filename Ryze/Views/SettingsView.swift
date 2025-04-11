@@ -6,13 +6,16 @@
 //
 
 import SwiftUI
+import LocalAuthentication
 
 struct SettingsView: View {
     // Environment objects
     @EnvironmentObject private var thoughtViewModel: ThoughtViewModel
+    @StateObject private var authManager = AuthenticationManager.shared
     
     // Settings state
     @AppStorage("useBiometricAuth") private var useBiometricAuth = false
+    @AppStorage("secureDataStorage") private var secureDataStorage = true
     @AppStorage("notificationsEnabled") private var notificationsEnabled = true
     @AppStorage("reminderTime") private var reminderTime = 3600.0 // Default 1 hour before deadline
     
@@ -29,7 +32,29 @@ struct SettingsView: View {
             List {
                 // Security section
                 Section("Security") {
-                    Toggle("Use Face ID / Touch ID", isOn: $useBiometricAuth)
+                    // Biometric authentication toggle
+                    if authManager.biometricType != .none {
+                        Toggle(biometricToggleLabel, isOn: $useBiometricAuth)
+                            .tint(.blue)
+                            .onChange(of: useBiometricAuth) { oldValue, newValue in
+                                if newValue {
+                                    // Test authentication to make sure it works
+                                    Task {
+                                        let success = await authManager.authenticate(reason: "Confirm you can use biometric authentication")
+                                        if !success {
+                                            // If authentication fails, revert the toggle
+                                            useBiometricAuth = false
+                                        }
+                                    }
+                                }
+                            }
+                    } else {
+                        Text("Biometric authentication is not available on this device")
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    // Secure data storage toggle
+                    Toggle("Enable Secure Data Storage", isOn: $secureDataStorage)
                         .tint(.blue)
                 }
                 
@@ -151,6 +176,17 @@ struct SettingsView: View {
     
     // MARK: - Computed Properties
     
+    private var biometricToggleLabel: String {
+        switch authManager.biometricType {
+        case .faceID:
+            return "Use Face ID"
+        case .touchID:
+            return "Use Touch ID"
+        case .none:
+            return "Use Biometric Authentication"
+        }
+    }
+    
     private var reminderTimeFormatted: String {
         let hours = Int(reminderTime) / 3600
         let minutes = (Int(reminderTime) % 3600) / 60
@@ -193,7 +229,7 @@ struct SettingsView: View {
     private var privacyView: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("Privacy")
+                Text("Privacy & Security")
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .padding(.bottom)
@@ -202,16 +238,63 @@ struct SettingsView: View {
                     .font(.headline)
                     .padding(.bottom)
                 
-                Text("By default, all your data stays on your device. Ryze is designed with privacy as a core principle.")
+                Group {
+                    Text("By default, all your data stays on your device. Ryze is designed with privacy as a core principle.")
+                    
+                    Text("Your thoughts, outcomes, and personal insights are stored locally on your device and are not transmitted to any servers.")
+                        .padding(.top, 8)
+                }
                 
-                Text("Your thoughts, outcomes, and personal insights are stored locally on your device and are not transmitted to any servers.")
-                    .padding(.top, 8)
+                Group {
+                    Text("Security Features")
+                        .font(.headline)
+                        .padding(.top, 16)
+                        .padding(.bottom, 4)
+                    
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(alignment: .top) {
+                            Image(systemName: "lock.shield")
+                                .foregroundColor(.blue)
+                                .frame(width: 24)
+                            VStack(alignment: .leading) {
+                                Text("Biometric Authentication")
+                                    .fontWeight(.semibold)
+                                Text("When enabled, \(authManager.biometricType == .faceID ? "Face ID" : "Touch ID") is required to access the app, providing an extra layer of privacy.")
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        
+                        HStack(alignment: .top) {
+                            Image(systemName: "key")
+                                .foregroundColor(.blue)
+                                .frame(width: 24)
+                            VStack(alignment: .leading) {
+                                Text("Secure Data Storage")
+                                    .fontWeight(.semibold)
+                                Text("Your data is stored securely on your device with additional encryption to protect your privacy.")
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        
+                        HStack(alignment: .top) {
+                            Image(systemName: "icloud.slash")
+                                .foregroundColor(.blue)
+                                .frame(width: 24)
+                            VStack(alignment: .leading) {
+                                Text("No Cloud Storage")
+                                    .fontWeight(.semibold)
+                                Text("Your data is stored only on your device and not in the cloud, keeping your thoughts private.")
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                }
                 
                 Spacer()
             }
             .padding()
         }
-        .navigationTitle("Privacy")
+        .navigationTitle("Privacy & Security")
         .navigationBarTitleDisplayMode(.inline)
     }
 }
