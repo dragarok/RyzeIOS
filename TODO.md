@@ -78,13 +78,13 @@ Ryze is an iOS application designed to help users break free from fear-based thi
 **Deliverable**: Improved user experience with intuitive navigation ✅
 
 ### Version 0.6: Security & Privacy Features
-- [ ] **Privacy & Security**
-  - [ ] Add Face ID/Touch ID authentication option
-  - [ ] Implement secure data storage
-  - [ ] Create privacy settings screen
-  - [ ] Ensure all data remains local by default
+- [x] **Privacy & Security**
+  - [x] Add Face ID/Touch ID authentication option
+  - [x] Implement secure data storage
+  - [x] Create privacy settings screen
+  - [x] Ensure all data remains local by default
 
-**Deliverable**: Privacy-focused app with biometric security
+**Deliverable**: Privacy-focused app with biometric security ✅
 
 ### Version 0.7: UI Polish & Refinement
 - [ ] **User Experience Improvements**
@@ -137,6 +137,7 @@ Ryze is an iOS application designed to help users break free from fear-based thi
 - [ ] Handle missed notification
 - [ ] Cleaning up notification on reschedule or done
 - [ ] Add data export functionality
+- [ ] Adding pin when faceid doesnt work but not phone's default pin
 
 ## Future Versions (Post 1.0)
 
