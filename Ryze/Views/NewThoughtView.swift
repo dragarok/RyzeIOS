@@ -21,7 +21,15 @@ struct NewThoughtView: View {
     
     var body: some View {
         NavigationStack {
-            VStack {
+            ZStack {
+                // Background color based on current step
+                Rectangle()
+                    .fill(currentStep <= OutcomeType.allCases.count && currentStep > 0 ? 
+                          OutcomeType.allCases[currentStep - 1].color.opacity(0.05) : 
+                          Color.blue.opacity(0.03))
+                    .ignoresSafeArea()
+                
+                VStack {
                 // Content based on current step
                 if !showingReview {
                     stepContent
@@ -41,6 +49,7 @@ struct NewThoughtView: View {
                 }
             }
             .padding()
+            } // End ZStack
             .navigationTitle(showingReview ? "Review" : "New Thought")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -61,57 +70,74 @@ struct NewThoughtView: View {
     private var stepContent: some View {
         VStack(alignment: .leading, spacing: 24) {
             // Progress indicator
-            ProgressView(value: progress)
-                .tint(.blue)
-                .padding(.bottom)
+            ZStack(alignment: .leading) {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(Color(.systemGray5))
+                    .frame(height: 12)
+                
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(currentStep <= OutcomeType.allCases.count && currentStep > 0 
+                          ? OutcomeType.allCases[currentStep - 1].color 
+                          : .blue)
+                    .frame(width: UIScreen.main.bounds.width * 0.85 * progress, height: 12)
+            }
+            .padding(.bottom, 16)
             
             if currentStep == 0 {
                 // Step 1: Thought input
                 thoughtInputStep
+                    .transition(.opacity.combined(with: .slide))
             } else if currentStep <= OutcomeType.allCases.count {
                 // Steps 2-7: Outcome inputs
                 outcomeInputStep(for: OutcomeType.allCases[currentStep - 1])
+                    .transition(.opacity.combined(with: .slide))
             } else {
                 // Step 8: Deadline selection
                 deadlineSelectionStep
+                    .transition(.opacity.combined(with: .slide))
             }
         }
     }
     
     // Step 1: Thought input view
     private var thoughtInputStep: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 24) {
             Text("What's on your mind?")
-                .font(.title2)
-                .fontWeight(.medium)
+                .font(.title)
+                .fontWeight(.bold)
+                .padding(.top, 8)
             
             Text("Enter the thought or concern that's causing you to feel overwhelmed or anxious.")
-                .font(.subheadline)
+                .font(.body)
                 .foregroundColor(.secondary)
+                .padding(.bottom, 8)
             
             TextField("Example: Will my project be successful?", text: $viewModel.newThoughtText, axis: .vertical)
                 .font(.body)
-                .padding()
+                .padding(16)
                 .background(
-                    RoundedRectangle(cornerRadius: 8)
+                    RoundedRectangle(cornerRadius: 12)
                         .fill(Color(.secondarySystemBackground))
+                        .shadow(color: Color.blue.opacity(0.2), radius: 4, x: 0, y: 2)
                 )
-                .frame(height: 120, alignment: .top)
+                .frame(height: 150, alignment: .top)
                 .multilineTextAlignment(.leading)
+                .animation(.easeInOut, value: viewModel.newThoughtText)
         }
     }
     
     // Steps 2-7: Outcome input views
     private func outcomeInputStep(for outcomeType: OutcomeType) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 24) {
             Text("\(outcomeType.displayName) Outcome")
-                .font(.title2)
-                .fontWeight(.medium)
+                .font(.title)
+                .fontWeight(.bold)
                 .foregroundColor(outcomeType.color)
             
             Text("Describe what a \(outcomeType.displayName.lowercased()) outcome would look like for this thought.")
-                .font(.subheadline)
+                .font(.body)
                 .foregroundColor(.secondary)
+                .padding(.bottom, 8)
             
             // Ensure the dictionary has a value for this key
             let binding = Binding(
@@ -121,12 +147,13 @@ struct NewThoughtView: View {
             
             TextField("I would..." , text: binding, axis: .vertical)
                 .font(.body)
-                .padding()
+                .padding(16)
                 .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(outcomeType.color.opacity(0.1))
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(outcomeType.color.opacity(0.15))
+                        .shadow(color: outcomeType.color.opacity(0.2), radius: 4, x: 0, y: 2)
                 )
-                .frame(height: 120, alignment: .top)
+                .frame(height: 150, alignment: .top)
                 .multilineTextAlignment(.leading)
             
             HStack {
@@ -140,14 +167,16 @@ struct NewThoughtView: View {
     
     // Step 8: Deadline selection
     private var deadlineSelectionStep: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 24) {
             Text("When will you know?")
-                .font(.title2)
-                .fontWeight(.medium)
+                .font(.title)
+                .fontWeight(.bold)
+                .padding(.top, 8)
             
             Text("Set a deadline for when you expect to know the actual outcome.")
-                .font(.subheadline)
+                .font(.body)
                 .foregroundColor(.secondary)
+                .padding(.bottom, 8)
             
             DatePicker(
                 "Deadline",
@@ -161,6 +190,7 @@ struct NewThoughtView: View {
             .background(
                 RoundedRectangle(cornerRadius: 12)
                     .fill(Color(.secondarySystemBackground))
+                    .shadow(color: Color.blue.opacity(0.2), radius: 4, x: 0, y: 2)
             )
         }
     }
@@ -279,7 +309,9 @@ struct NewThoughtView: View {
     // MARK: - Navigation Controls
     
     private var navigationButtons: some View {
-        HStack {
+        HStack(spacing: 20) {
+            Spacer()
+            
             // Back button
             if currentStep > 0 {
                 Button(action: {
@@ -289,14 +321,17 @@ struct NewThoughtView: View {
                         Image(systemName: "arrow.left")
                         Text("Back")
                     }
-                    .padding()
-                    .foregroundColor(.blue)
+                    .padding(.vertical, 16)
+                    .padding(.horizontal, 24)
+                    .foregroundColor(currentStep <= OutcomeType.allCases.count && currentStep > 0 ? 
+                                    OutcomeType.allCases[currentStep - 1].color : .blue)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(currentStep <= OutcomeType.allCases.count && currentStep > 0 ? 
+                                   OutcomeType.allCases[currentStep - 1].color : .blue, lineWidth: 1.5)
+                    )
                 }
-            } else {
-                Spacer()
             }
-            
-            Spacer()
             
             // Next/Continue button
             Button(action: {
@@ -308,33 +343,42 @@ struct NewThoughtView: View {
             }) {
                 if currentStep == totalSteps - 1 {
                     Text("Review")
+                        .fontWeight(.medium)
                 } else {
                     Text("Next")
+                        .fontWeight(.medium)
                 }
             }
             .disabled(currentStep == 0 && viewModel.newThoughtText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            .padding()
+            .padding(.vertical, 16)
+            .padding(.horizontal, 24)
             .foregroundColor(.white)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(currentStep == 0 && viewModel.newThoughtText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? Color.gray : Color.blue)
+                    .fill(currentStep == 0 && viewModel.newThoughtText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 
+                         Color.gray : 
+                         (currentStep <= OutcomeType.allCases.count && currentStep > 0 ? 
+                          OutcomeType.allCases[currentStep - 1].color : .blue))
             )
+            
+            Spacer()
         }
     }
     
     private var reviewButtons: some View {
-        VStack {
+        VStack(spacing: 16) {
             Button(action: {
                 showingReview = false
                 currentStep = totalSteps - 1
             }) {
                 Text("Edit")
-                    .padding()
-                    .foregroundColor(.blue)
+                    .fontWeight(.medium)
+                    .padding(.vertical, 16)
                     .frame(maxWidth: .infinity)
-                    .overlay(
+                    .foregroundColor(.blue)
+                    .background(
                         RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.blue, lineWidth: 1)
+                            .stroke(Color.blue, lineWidth: 1.5)
                     )
             }
             
@@ -343,16 +387,20 @@ struct NewThoughtView: View {
                 dismiss()
             }) {
                 Text("Save")
-                    .padding()
-                    .foregroundColor(.white)
+                    .fontWeight(.medium)
+                    .padding(.vertical, 16)
                     .frame(maxWidth: .infinity)
+                    .foregroundColor(.white)
                     .background(
                         RoundedRectangle(cornerRadius: 12)
                             .fill(viewModel.selectedExpectedOutcome != nil ? Color.blue : Color.gray)
+                            .shadow(color: Color.blue.opacity(0.2), radius: 4, x: 0, y: 2)
                     )
             }
             .disabled(viewModel.selectedExpectedOutcome == nil)
         }
+        .padding(.horizontal, 20)
+        .padding(.bottom, 16)
     }
     
     // MARK: - Helpers
