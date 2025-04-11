@@ -45,7 +45,6 @@ Ryze is an iOS application designed to help users break free from fear-based thi
   - [x] Include basic filtering/sorting options
 
 **Deliverable**: Ability to view saved thoughts and their details ✅
-**Deliverable**: Ability to view saved thoughts and their details ✅
 
 ### Version 0.4: Local Notifications
 - [x] **Notification System**
@@ -87,14 +86,14 @@ Ryze is an iOS application designed to help users break free from fear-based thi
 **Deliverable**: Privacy-focused app with biometric security ✅
 
 ### Version 0.7: UI Polish & Refinement
-- [ ] **User Experience Improvements**
-  - [ ] Refine animations and transitions
-  - [ ] Implement Zen-inspired color scheme
-  - [ ] Optimize layout for different iOS devices
-  - [ ] Add subtle haptic feedback
-  - [ ] Ensure consistent typography and spacing
+- [x] **User Experience Improvements**
+  - [x] Refine animations and transitions
+  - [x] Implement Zen-inspired color scheme
+  - [x] Optimize layout for different iOS devices
+  - [x] Add subtle shadows and visual hierarchy
+  - [x] Ensure consistent typography and spacing
 
-**Deliverable**: Polished, zen-like minimalist interface
+**Deliverable**: Polished, zen-like minimalist interface ✅
 
 ### Version 0.8: Onboarding & Help
 - [ ] **User Guidance**
@@ -138,6 +137,7 @@ Ryze is an iOS application designed to help users break free from fear-based thi
 - [ ] Cleaning up notification on reschedule or done
 - [ ] Add data export functionality
 - [ ] Adding pin when faceid doesnt work but not phone's default pin
+- [ ] Add subtle haptic feedback
 
 ## Future Versions (Post 1.0)
 
