@@ -32,12 +32,12 @@ enum OutcomeType: String, Codable, CaseIterable, Identifiable {
     
     var color: Color {
         switch self {
-        case .worst: return .red
-        case .worse: return .orange
-        case .okay: return .yellow
-        case .good: return .green
-        case .better: return .blue
-        case .best: return .purple
+        case .worst: return Color(red: 0.85, green: 0.22, blue: 0.22)    // Soft red
+        case .worse: return Color(red: 0.90, green: 0.45, blue: 0.27)    // Warm orange
+        case .okay: return Color(red: 0.85, green: 0.68, blue: 0.20)     // Muted gold
+        case .good: return Color(red: 0.45, green: 0.70, blue: 0.45)     // Sage green
+        case .better: return Color(red: 0.35, green: 0.60, blue: 0.75)   // Ocean blue
+        case .best: return Color(red: 0.55, green: 0.40, blue: 0.70)     // Lavender purple
         }
     }
 }
