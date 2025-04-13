@@ -19,6 +19,10 @@ struct RyzeApp: App {
     // Create a shared view model instance
     @StateObject private var thoughtViewModel: ThoughtViewModel
     
+    // Onboarding state
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding: Bool = false
+    @State private var showOnboarding: Bool = false
+    
     // Initialize dependencies
     init() {
         // Create data store
@@ -34,16 +38,36 @@ struct RyzeApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environmentObject(thoughtViewModel)
-                .withNotifications() // Add notification handling
-                .withAuthentication() // Add authentication handling
-                .onAppear {
-                    // Request notification permissions when the app launches
-                    notificationManager.requestAuthorization()
-                    // Assign the view model to the notification manager
-                    notificationManager.thoughtViewModel = thoughtViewModel
+            ZStack {
+                ContentView()
+                    .environmentObject(thoughtViewModel)
+                    .withNotifications() // Add notification handling
+                    .withAuthentication() // Add authentication handling
+                    .onAppear {
+                        // Request notification permissions when the app launches
+                        notificationManager.requestAuthorization()
+                        // Assign the view model to the notification manager
+                        notificationManager.thoughtViewModel = thoughtViewModel
+                        
+                        // Check if onboarding should be shown
+                        if !hasCompletedOnboarding {
+                            showOnboarding = true
+                        }
+                    }
+                
+                // Show onboarding overlay if needed
+                if showOnboarding {
+                    OnboardingView(viewModel: thoughtViewModel, showOnboarding: $showOnboarding)
+                        .transition(.opacity)
+                        .zIndex(1)
+                        .onChange(of: showOnboarding) { oldValue, newValue in
+                            if !newValue {
+                                // Mark onboarding as completed when dismissed
+                                hasCompletedOnboarding = true
+                            }
+                        }
                 }
+            }
         }
     }
 }
