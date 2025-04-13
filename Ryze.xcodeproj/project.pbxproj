@@ -27,14 +27,23 @@
 		AC81CB702DA3476700A3D356 /* Ryze.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ryze.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AC81CB7D2DA3476900A3D356 /* RyzeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RyzeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AC81CB872DA3476900A3D356 /* RyzeUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RyzeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		FD1B26152BB62C0000C5F3E8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		ACAD33AD2DAB3992002B709E /* Exceptions for "Ryze" folder in "Ryze" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = AC81CB6F2DA3476700A3D356 /* Ryze */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		AC81CB722DA3476700A3D356 /* Ryze */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			children = (
-				FD1B26152BB62C0000C5F3E8 /* Info.plist */,
+			exceptions = (
+				ACAD33AD2DAB3992002B709E /* Exceptions for "Ryze" folder in "Ryze" target */,
 			);
 			path = Ryze;
 			sourceTree = "<group>";
@@ -50,6 +59,7 @@
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
 		AC81CB6D2DA3476700A3D356 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;

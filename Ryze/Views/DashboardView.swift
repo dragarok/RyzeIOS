@@ -10,6 +10,7 @@ import SwiftUI
 struct DashboardView: View {
     @ObservedObject var viewModel: ThoughtViewModel
     @State private var isAnimating = false
+    @State private var selectedChart: InsightsChartView.ChartType? = nil
     
     var body: some View {
         NavigationStack {
@@ -67,42 +68,49 @@ struct DashboardView: View {
                     }
                     .padding(.horizontal)
                     
-                    // Placeholder for future insights with zen-like styling
-                    VStack(alignment: .center, spacing: 20) {
-                        Spacer()
-                        
-                        Image(systemName: "leaf")
-                            .font(.system(size: 36))
-                            .foregroundColor(.secondary.opacity(0.6))
-                            .symbolEffect(
-                                .bounce.up.byLayer,
-                                options: .repeating,
-                                value: isAnimating
-                            )
-                        
-                        Text("Insights dashboard coming soon")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
+                    // Enhanced insights charts
+                    if viewModel.resolvedThoughts.isEmpty {
+                        // Show placeholder when no data is available
+                        VStack(alignment: .center, spacing: 20) {
+                            Spacer()
                             
-                        Text("Your journey of growth awaits")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary.opacity(0.7))
-                            .padding(.top, 4)
+                            Image(systemName: "leaf")
+                                .font(.system(size: 36))
+                                .foregroundColor(.secondary.opacity(0.6))
+                                .symbolEffect(
+                                    .bounce.up.byLayer,
+                                    options: .repeating,
+                                    value: isAnimating
+                                )
                             
-                        Spacer()
+                            Text("No insights yet")
+                                .font(.headline)
+                                .foregroundColor(.secondary)
+                                
+                            Text("Record outcomes to see patterns emerge")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary.opacity(0.7))
+                                .padding(.top, 4)
+                                
+                            Spacer()
+                        }
+                        .frame(maxWidth: .infinity, minHeight: 240)
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 20)
+                                .fill(Color(.secondarySystemBackground).opacity(0.8))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 20)
+                                        .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 1)
+                                )
+                                .shadow(color: Color.black.opacity(0.02), radius: 2, x: 0, y: 1)
+                        )
+                        .padding(.horizontal)
+                    } else {
+                        // Show insights charts when data is available
+                        InsightsChartView(viewModel: viewModel)
+                            .padding(.horizontal)
                     }
-                    .frame(maxWidth: .infinity, minHeight: 240)
-                    .padding()
-                    .background(
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(Color(.secondarySystemBackground).opacity(0.8))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 20)
-                                    .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 1)
-                            )
-                            .shadow(color: Color.black.opacity(0.02), radius: 2, x: 0, y: 1)
-                    )
-                    .padding(.horizontal)
                     
                     Spacer()
                 }
@@ -110,6 +118,11 @@ struct DashboardView: View {
             }
             .navigationTitle("Dashboard")
             .background(Color(.systemBackground))
+            .sheet(item: $selectedChart) { chartType in
+                NavigationStack {
+                    ChartDetailView(chartType: chartType, viewModel: viewModel)
+                }
+            }
             .onAppear {
                 // Trigger the animations when the view appears
                 isAnimating = true

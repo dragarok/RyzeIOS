@@ -29,6 +29,12 @@ By building a personal database of expected vs. actual outcomes, users can devel
 - **Outcome Spectrum**: Define scenarios ranging from worst to best case
 - **Deadline Reminders**: Full-screen notifications when it's time to record what actually happened
 - **Insights Dashboard**: Visualize the patterns between what you feared and what occurred
+  - Stacked bar charts comparing expected vs. actual outcomes
+  - Trend lines showing your prediction accuracy over time
+  - Outcome distribution analysis
+  - Personalized positivity score with detailed explanations
+- **Emotional Onboarding**: An engaging introduction that connects with users at a personal level
+- **Interactive Examples**: Guided walkthroughs that demonstrate the app's value
 - **Privacy-First**: Face ID protection and local data storage by default
 
 ## Philosophy
@@ -43,7 +49,13 @@ We believe your thoughts are deeply personal. By default, all your data stays on
 
 ## Development Status
 
-Ryze is currently in early development. See [TODO.md](./TODO.md) for the current roadmap and progress.
+Ryze is currently in active development. Recently completed features include:
+
+- Enhanced data visualizations for deeper insight into thought patterns
+- Personalized onboarding experience that creates an emotional connection
+- Interactive example thought creation flow
+
+See [TODO.md](./TODO.md) for the complete roadmap and progress.
 
 ## Project Structure
 
@@ -57,11 +69,15 @@ Ryze is currently in early development. See [TODO.md](./TODO.md) for the current
   - `Models.swift`: Core data models (Thought, Outcome)
   - `DataStore.swift`: Data persistence layer using SwiftData
   - `ThoughtViewModel.swift`: View model managing thought data and user interactions
+  - `AnalyticsManager.swift`: Processing and analysis of thought patterns
 - **Views/**: UI components organized by function
   - `NewThoughtView.swift`: Form for creating new thoughts
   - `ThoughtListView.swift`: History of all thoughts
   - `ThoughtDetailView.swift`: Detailed view of a specific thought
   - `DashboardView.swift`: Analytics and insights
+  - `InsightsChartView.swift`: Visualizations of thought patterns
+  - `ChartDetailView.swift`: Detailed chart analysis with explanations
+  - `OnboardingView.swift`: Personalized introduction experience
   - `SettingsView.swift`: App configuration
 - **ContentView.swift**: Main container view with tab navigation
 - **RyzeApp.swift**: App entry point
@@ -71,6 +87,8 @@ Ryze is currently in early development. See [TODO.md](./TODO.md) for the current
 - Dashboard serves as the home screen
 - "New Thought" tab automatically triggers the thought creation form
 - History tab shows all past thoughts with resolution status
+- First-time users experience personalized onboarding
+- Chart interactions provide deeper insights with positive messaging
 
 ## Design Philosophy
 
@@ -81,5 +99,6 @@ Ryze embraces a zen-like minimalist design approach:
 - **Zen Color Palette**: Subtle, calming colors that promote mindfulness and reflection
 - **System Defaults**: Supporting light/dark mode through iOS system settings
 - **Focus on Content**: The user's thoughts and insights take center stage, not the interface
+- **Emotional Connection**: Creating moments of personal resonance through thoughtful design
 
 This minimalist approach aligns perfectly with the app's purpose — creating mental clarity and reducing noise, both in thought patterns and in the interface itself.
