@@ -37,6 +37,14 @@ struct FullScreenNotificationView: View {
             .opacity(0.95) // Increased opacity (less transparent)
     }
     
+    // Function to properly dismiss the notification
+    private func closeNotification() {
+        // Update the NotificationManager state
+        NotificationManager.shared.showDeadlineNotification = false
+        NotificationManager.shared.currentThought = nil
+        dismiss()
+    }
+    
     var body: some View {
         ZStack {
             // Animated background
@@ -53,7 +61,7 @@ struct FullScreenNotificationView: View {
                     Spacer()
                     
                     Button {
-                        dismiss()
+                        closeNotification()
                     } label: {
                         Image(systemName: "xmark.circle.fill")
                             .font(.title)
@@ -177,7 +185,7 @@ struct FullScreenNotificationView: View {
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                                     viewModel.resolveThought(thought, with: selectedOutcome)
                                     DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                                        dismiss()
+                                        closeNotification()
                                     }
                                 }
                             }
@@ -259,7 +267,7 @@ struct FullScreenNotificationView: View {
                         Button {
                             viewModel.updateThoughtDeadline(thought, newDeadline: rescheduleDate)
                             showRescheduleSheet = false
-                            dismiss()
+                            closeNotification()
                         } label: {
                             Text("Save New Deadline")
                                 .fontWeight(.semibold)
