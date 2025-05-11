@@ -10,33 +10,16 @@ import SwiftUI
 struct FullScreenNotificationView: View {
     // The thought that has reached its deadline
     let thought: Thought
-    
+
     // Environment objects and state variables
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var viewModel: ThoughtViewModel
-    @State private var blinkState = false
     @State private var showDetails = true // Changed to true - expanded view by default
     @State private var selectedOutcome: OutcomeType? = nil
     @State private var showConfirmation = false
     @State private var showRescheduleSheet = false
     @State private var rescheduleDate = Date()
-    
-    // Animation properties
-    private let blinkDuration = 1.5
-    private let zenGradient = Gradient(
-        colors: [
-            Color(red: 0.1, green: 0.6, blue: 0.4),
-            Color(red: 0.1, green: 0.5, blue: 0.6)
-        ]
-    )
-    
-    // Custom background animation
-    private var animatedBackground: some View {
-        LinearGradient(gradient: zenGradient, startPoint: blinkState ? .topLeading : .bottomTrailing, endPoint: blinkState ? .bottomTrailing : .topLeading)
-            .ignoresSafeArea()
-            .opacity(0.95) // Increased opacity (less transparent)
-    }
-    
+
     // Function to properly dismiss the notification
     private func closeNotification() {
         // Update the NotificationManager state
@@ -44,32 +27,32 @@ struct FullScreenNotificationView: View {
         NotificationManager.shared.currentThought = nil
         dismiss()
     }
-    
+
     var body: some View {
         ZStack {
-            // Animated background
-            animatedBackground
-            
+            // White background
+            Color.white.ignoresSafeArea()
+
             VStack(spacing: 24) {
                 // Title and close button
                 HStack {
                     Text("Deadline Reached")
                         .font(.largeTitle)
                         .fontWeight(.bold)
-                        .foregroundColor(.white)
-                    
+                        .foregroundColor(.primary)
+
                     Spacer()
-                    
+
                     Button {
                         closeNotification()
                     } label: {
                         Image(systemName: "xmark.circle.fill")
                             .font(.title)
-                            .foregroundColor(.white.opacity(0.8))
+                            .foregroundColor(.gray)
                     }
                 }
                 .padding(.horizontal)
-                
+
                 // Main content
                 ScrollView {
                     VStack(alignment: .leading, spacing: 20) {
@@ -77,47 +60,47 @@ struct FullScreenNotificationView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Your thought:")
                                 .font(.headline)
-                                .foregroundColor(.white.opacity(0.8))
-                            
+                                .foregroundColor(.secondary)
+
                             Text(thought.question)
-                                .font(.title2)
+                                .font(.title3)
                                 .fontWeight(.medium)
-                                .foregroundColor(.white)
+                                .foregroundColor(.primary)
                                 .padding()
-                                .background(Color.white.opacity(0.15))
+                                .background(Color(.secondarySystemBackground))
                                 .cornerRadius(12)
                         }
-                        
+
                         // Expected outcome
                         VStack(alignment: .leading, spacing: 8) {
                             Text("You expected:")
                                 .font(.headline)
-                                .foregroundColor(.white.opacity(0.8))
-                            
+                                .foregroundColor(.secondary)
+
                             if let expectedType = thought.expectedOutcomeType {
                                 HStack {
                                     Circle()
                                         .fill(expectedType.color)
                                         .frame(width: 14, height: 14)
-                                    
+
                                     Text(expectedType.displayName)
                                         .font(.body)
                                         .fontWeight(.semibold)
-                                        .foregroundColor(.white)
+                                        .foregroundColor(expectedType.color)
                                 }
                                 .padding(.vertical, 8)
                                 .padding(.horizontal, 12)
-                                .background(Color.white.opacity(0.15))
+                                .background(expectedType.color.opacity(0.1))
                                 .cornerRadius(12)
                             }
                         }
-                        
+
                         // Outcomes section
                         VStack(alignment: .leading, spacing: 12) {
                             Text("What actually happened?")
                                 .font(.headline)
-                                .foregroundColor(.white)
-                            
+                                .foregroundColor(.primary)
+
                             // List of outcomes to select from
                             if let outcomes = thought.outcomes {
                                 ForEach(outcomes.sorted(by: { $0.type.rawValue < $1.type.rawValue }), id: \.id) { outcome in
@@ -137,7 +120,7 @@ struct FullScreenNotificationView: View {
                                     )
                                 }
                             }
-                            
+
                             // Toggle details button
                             Button {
                                 withAnimation {
@@ -149,16 +132,14 @@ struct FullScreenNotificationView: View {
                                     Image(systemName: showDetails ? "chevron.up" : "chevron.down")
                                 }
                                 .font(.subheadline)
-                                .foregroundColor(.white)
+                                .foregroundColor(.primary)
                                 .padding(.vertical, 8)
                             }
                         }
                     }
                     .padding()
                 }
-                .background(Color.black.opacity(0.15))
-                .cornerRadius(16)
-                
+
                 // Action buttons
                 HStack(spacing: 16) {
                     // Reschedule button
@@ -169,13 +150,13 @@ struct FullScreenNotificationView: View {
                             Image(systemName: "calendar.badge.clock")
                             Text("Reschedule")
                         }
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.white.opacity(0.2))
+                        .background(Color(.secondarySystemBackground))
                         .cornerRadius(12)
                     }
-                    
+
                     // Confirm outcome button
                     Button {
                         if let selectedOutcome = selectedOutcome {
@@ -195,10 +176,10 @@ struct FullScreenNotificationView: View {
                             Image(systemName: "checkmark.circle")
                             Text("Confirm")
                         }
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(selectedOutcome != nil ? Color.white.opacity(0.2) : Color.gray.opacity(0.2))
+                        .background(selectedOutcome != nil ? (selectedOutcome!.color.opacity(0.2)) : Color(.secondarySystemBackground))
                         .cornerRadius(12)
                     }
                     .disabled(selectedOutcome == nil)
@@ -206,13 +187,13 @@ struct FullScreenNotificationView: View {
                 .padding(.top)
             }
             .padding()
-            
+
             // Confirmation overlay
             if showConfirmation {
                 ZStack {
                     Color.black.opacity(0.4)
                         .ignoresSafeArea()
-                    
+
                     VStack(spacing: 16) {
                         // Large checkmark
                         Image(systemName: "checkmark.circle.fill")
@@ -221,18 +202,18 @@ struct FullScreenNotificationView: View {
                             .frame(width: 120, height: 120)
                             .foregroundColor(.green)
                             .padding()
-                        
+
                         Text("Reality Recorded!")
                             .font(.title)
                             .fontWeight(.bold)
-                            .foregroundColor(.white)
-                        
+                            .foregroundColor(.primary)
+
                         Text("You've successfully recorded what actually happened.")
                             .multilineTextAlignment(.center)
-                            .foregroundColor(.white.opacity(0.8))
+                            .foregroundColor(.secondary)
                     }
                     .padding(40)
-                    .background(Color.black.opacity(0.6))
+                    .background(Color(.secondarySystemBackground))
                     .cornerRadius(20)
                     .transition(.scale.combined(with: .opacity))
                 }
@@ -240,11 +221,6 @@ struct FullScreenNotificationView: View {
             }
         }
         .onAppear {
-            // Start the blinking animation
-            withAnimation(Animation.easeInOut(duration: blinkDuration).repeatForever(autoreverses: true)) {
-                blinkState = true
-            }
-            
             // Set the reschedule date to tomorrow by default
             rescheduleDate = Date().addingTimeInterval(86400)
         }
@@ -252,18 +228,17 @@ struct FullScreenNotificationView: View {
             // Reschedule sheet
             NavigationView {
                 ZStack {
-                    // Use the same gradient background as the main view
-                    LinearGradient(gradient: zenGradient, startPoint: .topLeading, endPoint: .bottomTrailing)
+                    // Use a white background
+                    Color.white
                         .ignoresSafeArea()
                     VStack {
                         DatePicker("New deadline", selection: $rescheduleDate, in: Date()...)
                             .datePickerStyle(.graphical)
                             .padding()
-                            .background(Color.white.opacity(0.2))
+                            .background(Color(.secondarySystemBackground))
                             .cornerRadius(16)
                             .padding()
-                            .colorScheme(.dark) // Ensure date picker is readable on dark background
-                        
+
                         Button {
                             viewModel.updateThoughtDeadline(thought, newDeadline: rescheduleDate)
                             showRescheduleSheet = false
@@ -271,10 +246,10 @@ struct FullScreenNotificationView: View {
                         } label: {
                             Text("Save New Deadline")
                                 .fontWeight(.semibold)
-                                .foregroundColor(.white)
+                                .foregroundColor(.primary)
                                 .frame(maxWidth: .infinity)
                                 .padding()
-                                .background(Color(red: 0.1, green: 0.5, blue: 0.6))
+                                .background(Color(.secondarySystemBackground))
                                 .cornerRadius(12)
                                 .padding(.horizontal)
                         }
@@ -287,7 +262,7 @@ struct FullScreenNotificationView: View {
                         Button("Cancel") {
                             showRescheduleSheet = false
                         }
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary)
                     }
                 }
             }
@@ -301,7 +276,7 @@ struct OutcomeSelectionRow: View {
     let isSelected: Bool
     let isExpanded: Bool
     let onSelect: () -> Void
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             // Header row
@@ -317,14 +292,14 @@ struct OutcomeSelectionRow: View {
                                 .fill(isSelected ? outcome.type.color : Color.clear)
                         )
                         .frame(width: 22, height: 22)
-                    
+
                     // Type label
                     Text(outcome.type.displayName)
                         .font(.headline)
-                        .foregroundColor(.white)
-                    
+                        .foregroundColor(outcome.type.color)
+
                     Spacer()
-                    
+
                     // Type indicator
                     Circle()
                         .fill(outcome.type.color)
@@ -333,21 +308,21 @@ struct OutcomeSelectionRow: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(PlainButtonStyle())
-            
+
             // Expanded details
             if isExpanded {
                 Text(outcome.outcomeDescription)
                     .font(.body)
-                    .foregroundColor(.white.opacity(0.9))
+                    .foregroundColor(.primary)
                     .padding(.vertical, 8)
                     .padding(.horizontal, 12)
-                    .background(Color.white.opacity(0.1))
+                    .background(Color.white.opacity(0.6))
                     .cornerRadius(8)
                     .padding(.leading, 30) // Indent to align with the circle
             }
         }
         .padding(12)
-        .background(isSelected ? outcome.type.color.opacity(0.3) : Color.white.opacity(0.1))
+        .background(outcome.type.color.opacity(0.1))
         .cornerRadius(12)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
@@ -364,7 +339,7 @@ struct FullScreenNotificationView_Previews: PreviewProvider {
         let mockThought = Thought(question: "Will I be able to complete this project on time?")
         mockThought.expectedOutcomeType = .worse
         mockThought.deadline = Date()
-        
+
         let outcomes = [
             Outcome(type: .worst, description: "I'll completely fail and lose the client"),
             Outcome(type: .worse, description: "I'll deliver late and damage my reputation"),
@@ -373,13 +348,12 @@ struct FullScreenNotificationView_Previews: PreviewProvider {
             Outcome(type: .better, description: "I'll finish early and have time to enhance it"),
             Outcome(type: .best, description: "I'll create something exceptional that exceeds expectations")
         ]
-        
+
         mockThought.outcomes = outcomes
-        
+
         let viewModel = ThoughtViewModel(dataStore: DataStore())
-        
+
         return FullScreenNotificationView(thought: mockThought)
             .environmentObject(viewModel)
-            .preferredColorScheme(.dark)
     }
 }
