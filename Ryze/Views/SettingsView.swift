@@ -114,6 +114,12 @@ struct SettingsView: View {
                     NavigationLink(destination: aboutView) {
                         Text("About Ryze")
                     }
+
+                    NavigationLink(destination: ExampleView()) {
+                        HStack {
+                            Text("See an example")
+                        }
+                    }
                     
                     NavigationLink(destination: privacyView) {
                         Text("Privacy")

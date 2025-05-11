@@ -43,27 +43,6 @@ struct OnboardingView: View {
             .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                HStack {
-                    Button("Do not show again") {
-                        UserDefaults.standard.set(true, forKey: "permanentlyHideOnboarding")
-                        withAnimation {
-                            showOnboarding = false
-                        }
-                    }
-                    .padding()
-                    .foregroundColor(.secondary)
-
-                    Spacer()
-
-                    Button("Skip") {
-                        withAnimation {
-                            showOnboarding = false
-                        }
-                    }
-                    .padding()
-                    .foregroundColor(.secondary)
-                }
-
                 TabView(selection: $currentPage) {
                     mainPageViews.welcomePage
                         .tag(0)
