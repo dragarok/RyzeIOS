@@ -23,9 +23,6 @@ struct ExampleContentView: View {
     /// Closure to call when the user completes the example
     let onComplete: () -> Void
     
-    /// Optional closure to call when the user chooses to skip or hide onboarding
-    let onSkip: (() -> Void)?
-    
     /// Title to display in the navigation bar
     var navigationTitle: String {
         switch presentationType {
@@ -221,19 +218,6 @@ struct ExampleContentView: View {
                         .padding(.bottom, 10)
                         .frame(maxWidth: .infinity)
                     
-                    Button(action: onComplete) {
-                        Text(completeButtonText)
-                            .fontWeight(.medium)
-                            .foregroundColor(.white)
-                            .frame(minWidth: 200, minHeight: 50)
-                            .background(
-                                Capsule()
-                                    .fill(Color.blue)
-                                    .shadow(color: Color.black.opacity(0.1), radius: 3, x: 0, y: 2)
-                            )
-                    }
-                    .padding(.bottom, 30)
-                    .frame(maxWidth: .infinity)
                 }
                 
                 Spacer(minLength: 40)
@@ -249,8 +233,7 @@ struct ExampleContentView: View {
     NavigationStack {
         ExampleContentView(
             presentationType: .settings,
-            onComplete: {},
-            onSkip: nil
+            onComplete: {}
         )
     }
 }

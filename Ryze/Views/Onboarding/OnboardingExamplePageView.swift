@@ -76,18 +76,16 @@ struct OnboardingExamplePageView {
             ExampleContentView(
                 presentationType: .onboarding,
                 onComplete: {
-                    showExampleThought.wrappedValue = false
-                    showOnboarding.wrappedValue = false
-                },
-                onSkip: nil
-            )
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Close") {
+                    // Directly set the hasCompletedOnboarding flag
+                    UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+                    
+                    // Use withAnimation to ensure state changes are properly detected
+                    withAnimation {
                         showExampleThought.wrappedValue = false
+                        showOnboarding.wrappedValue = false
                     }
                 }
-            }
+            )
         }
     }
 }

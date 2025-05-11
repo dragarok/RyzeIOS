@@ -15,16 +15,8 @@ struct ExampleView: View {
         NavigationStack {
             ExampleContentView(
                 presentationType: .settings,
-                onComplete: { dismiss() },
-                onSkip: nil
+                onComplete: { dismiss() }
             )
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Close") {
-                        dismiss()
-                    }
-                }
-            }
             .onAppear {
                 withAnimation(.easeInOut(duration: 1).repeatForever(autoreverses: true)) {
                     animateIcon = true
