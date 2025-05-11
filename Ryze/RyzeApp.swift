@@ -50,8 +50,11 @@ struct RyzeApp: App {
                         notificationManager.thoughtViewModel = thoughtViewModel
                         
                         // Check if onboarding should be shown
-                        if !hasCompletedOnboarding {
-                            showOnboarding = true
+                        let permanentlyHidden = UserDefaults.standard.bool(forKey: "permanentlyHideOnboarding")
+
+                        // Only show if neither completed nor permanently hidden
+                        if !hasCompletedOnboarding && !permanentlyHidden {
+                        showOnboarding = true
                         }
                     }
                 
