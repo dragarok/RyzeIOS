@@ -79,13 +79,6 @@ struct SettingsView: View {
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
-                        
-                        Button(action: {
-                            showTestNotificationSheet = true
-                        }) {
-                            Label("Test Notification", systemImage: "bell.badge")
-                        }
-                        .padding(.vertical, 8)
                     }
                 }
                 

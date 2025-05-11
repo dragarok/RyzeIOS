@@ -47,6 +47,9 @@ class ThoughtViewModel: ObservableObject {
             self.thoughts = allThoughts
             self.activeThoughts = active
             self.resolvedThoughts = resolved
+            
+            // Check for any passed deadlines that need follow-up notifications
+            self.checkForPassedDeadlines()
         }
     }
     
@@ -88,9 +91,10 @@ class ThoughtViewModel: ObservableObject {
     func resolveThought(_ thought: Thought, with actualOutcomeType: OutcomeType) {
         thought.actualOutcomeType = actualOutcomeType
         thought.isResolved = true
+        thought.resolutionDate = Date()
         dataStore.updateThought(thought)
         
-        // Cancel notification since the thought is now resolved
+        // Cancel all notifications for this thought
         NotificationManager.shared.cancelNotification(for: thought)
         
         Task {
@@ -111,13 +115,37 @@ class ThoughtViewModel: ObservableObject {
     }
     
     func deleteThought(_ thought: Thought) {
-        // Cancel notification before deleting the thought
+        // Cancel all notifications before deleting the thought
         NotificationManager.shared.cancelNotification(for: thought)
         
         dataStore.deleteThought(thought)
         
         Task {
             await loadThoughts()
+        }
+    }
+    
+    // MARK: - Notification Management
+    
+    private func checkForPassedDeadlines() {
+        let now = Date()
+        
+        // Check each active thought for passed deadlines
+        for thought in activeThoughts {
+            if let deadline = thought.deadline, deadline < now, !thought.isResolved {
+                // This thought's deadline has passed and it's not resolved
+                // Schedule a follow-up notification if needed
+                
+                // We would typically check when the last notification was sent
+                // but for simplicity, we'll just check if it's been at least 2 days since the deadline
+                let twoDaysAgo = Calendar.current.date(byAdding: .day, value: -2, to: now) ?? now
+                
+                if deadline < twoDaysAgo {
+                    // It's been at least 2 days since the deadline passed
+                    // Schedule a follow-up notification
+                    NotificationManager.shared.scheduleFollowUpNotification(for: thought)
+                }
+            }
         }
     }
     

@@ -7,6 +7,7 @@
 
 import SwiftUI
 import UserNotifications
+import AVFoundation
 
 class NotificationManager: NSObject, ObservableObject {
     // Singleton instance
@@ -19,17 +20,59 @@ class NotificationManager: NSObject, ObservableObject {
     // Reference to the app's view model (set from RyzeApp)
     var thoughtViewModel: ThoughtViewModel? = nil
     
+    // Audio player for notification sound
+    private var audioPlayer: AVAudioPlayer?
+    
+    // Notification categories
+    private let deadlineCategoryId = "THOUGHT_DEADLINE"
+    private let followUpCategoryId = "THOUGHT_FOLLOWUP"
+    
     // Delegate for UNUserNotificationCenter
     private override init() {
         super.init()
         UNUserNotificationCenter.current().delegate = self
+        setupNotificationCategories()
+    }
+    
+    // Set up notification categories and actions
+    private func setupNotificationCategories() {
+        // Define actions for deadline notifications
+        let resolveAction = UNNotificationAction(
+            identifier: "RESOLVE_ACTION",
+            title: "Record Outcome",
+            options: .foreground
+        )
+        
+        let rescheduleAction = UNNotificationAction(
+            identifier: "RESCHEDULE_ACTION",
+            title: "Reschedule",
+            options: .foreground
+        )
+        
+        // Create categories
+        let deadlineCategory = UNNotificationCategory(
+            identifier: deadlineCategoryId,
+            actions: [resolveAction, rescheduleAction],
+            intentIdentifiers: [],
+            options: .customDismissAction
+        )
+        
+        let followupCategory = UNNotificationCategory(
+            identifier: followUpCategoryId,
+            actions: [resolveAction, rescheduleAction],
+            intentIdentifiers: [],
+            options: .customDismissAction
+        )
+        
+        // Register the categories
+        UNUserNotificationCenter.current().setNotificationCategories([deadlineCategory, followupCategory])
     }
     
     // Request notification permissions
     func requestAuthorization() {
         // Adding .criticalAlert requires an entitlement that would be granted by Apple for specific use cases
         // For standard app behavior, we'll use the normal notification options
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound, .provisional]) { granted, error in
             if granted {
                 print("Notification authorization granted")
             } else if let error = error {
@@ -54,16 +97,23 @@ class NotificationManager: NSObject, ObservableObject {
         content.sound = UNNotificationSound.defaultCritical
         // Make the notification stay on screen until dismissed
         content.interruptionLevel = .timeSensitive
+        // Add specific category identifier for actions
+        content.categoryIdentifier = deadlineCategoryId
         
-        // Store the thought ID in the notification
-        content.userInfo = ["thoughtID": thought.id.uuidString]
+        // Store the thought ID and timestamp in the notification
+        content.userInfo = [
+            "thoughtID": thought.id.uuidString,
+            "notificationType": "deadline",
+            "timestamp": Date().timeIntervalSince1970
+        ]
         
         // Create a calendar trigger for the deadline
         let triggerDate = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: deadline)
         let trigger = UNCalendarNotificationTrigger(dateMatching: triggerDate, repeats: false)
         
-        // Create the request
-        let request = UNNotificationRequest(identifier: "thought-\(thought.id.uuidString)", content: content, trigger: trigger)
+        // Create the request with a unique identifier that includes timestamp to avoid conflicts
+        let identifier = "thought-deadline-\(thought.id.uuidString)-\(Date().timeIntervalSince1970)"
+        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
         
         // Schedule the notification
         UNUserNotificationCenter.current().add(request) { error in
@@ -73,10 +123,61 @@ class NotificationManager: NSObject, ObservableObject {
         }
     }
     
-    // Cancel a notification for a specific thought
+    // Schedule a follow-up notification for unresolved thoughts
+    func scheduleFollowUpNotification(for thought: Thought, daysFromNow: Int = 2) {
+        // Only schedule follow-up if the thought isn't resolved yet
+        guard !thought.isResolved else { return }
+        
+        // Create the notification content
+        let content = UNMutableNotificationContent()
+        content.title = "⏰ REMINDER: Thought Needs Resolution ⏰"
+        content.body = "You haven't recorded the outcome yet: \(thought.question)"
+        content.sound = UNNotificationSound.defaultCritical
+        content.interruptionLevel = .timeSensitive
+        content.categoryIdentifier = followUpCategoryId
+        
+        // Store the thought ID and notification type
+        content.userInfo = [
+            "thoughtID": thought.id.uuidString,
+            "notificationType": "followup",
+            "timestamp": Date().timeIntervalSince1970
+        ]
+        
+        // Create a trigger for X days from now
+        let triggerDate = Calendar.current.date(byAdding: .day, value: daysFromNow, to: Date()) ?? Date()
+        let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: triggerDate)
+        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+        
+        // Create a unique identifier for this follow-up notification
+        let identifier = "thought-followup-\(thought.id.uuidString)-\(Date().timeIntervalSince1970)"
+        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+        
+        // Schedule the notification
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("Error scheduling follow-up notification: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    // Cancel all notifications for a specific thought
     func cancelNotification(for thought: Thought) {
-        let identifier = "thought-\(thought.id.uuidString)"
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [identifier])
+        // Get pending notification requests
+        UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
+            // Filter for notifications related to this thought
+            let identifiers = requests.compactMap { request -> String? in
+                if let thoughtID = request.content.userInfo["thoughtID"] as? String,
+                   thoughtID == thought.id.uuidString {
+                    return request.identifier
+                }
+                return nil
+            }
+            
+            // Remove all matching notifications
+            if !identifiers.isEmpty {
+                UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: identifiers)
+            }
+        }
     }
     
     // Find a thought by its ID
@@ -94,7 +195,18 @@ class NotificationManager: NSObject, ObservableObject {
         DispatchQueue.main.async {
             self.currentThought = thought
             self.showDeadlineNotification = true
+            self.playNotificationSound()
         }
+    }
+    
+    // Play a notification sound when the full-screen notification appears
+    private func playNotificationSound() {
+        // Create haptic feedback
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.warning)
+        
+        // Use system sound for simplicity
+        AudioServicesPlaySystemSound(1005) // This is a notification sound ID
     }
 }
 
@@ -109,6 +221,14 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
            let thought = findThought(withID: thoughtID, dataStore: dataStore) {
             // Present the full-screen notification
             presentFullScreenNotification(for: thought)
+            
+            // For an unresloved thought, schedule a follow-up notification
+            if !thought.isResolved,
+               let notificationType = notification.request.content.userInfo["notificationType"] as? String,
+               notificationType == "deadline" {
+                // Schedule a follow-up notification for 2 days later
+                scheduleFollowUpNotification(for: thought)
+            }
             
             // Don't show the system notification since we're displaying our custom UI
             completionHandler([])
@@ -127,6 +247,14 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
            let thought = findThought(withID: thoughtID, dataStore: dataStore) {
             // Present the full-screen notification
             presentFullScreenNotification(for: thought)
+            
+            // Schedule a follow-up if this was a deadline notification and the action wasn't taken
+            if !thought.isResolved,
+               let notificationType = response.notification.request.content.userInfo["notificationType"] as? String,
+               notificationType == "deadline" {
+                // Schedule a follow-up notification for 2 days later
+                scheduleFollowUpNotification(for: thought)
+            }
         }
         
         completionHandler()
