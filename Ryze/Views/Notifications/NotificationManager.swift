@@ -86,6 +86,8 @@ class NotificationManager: NSObject, ObservableObject {
         // Make sure we have a deadline to notify for
         guard let deadline = thought.deadline else { return }
         
+        print("[Notification] Scheduling deadline notification for thought: \(thought.id)")
+        
         // Remove any existing notifications for this thought
         cancelNotification(for: thought)
         
@@ -127,6 +129,8 @@ class NotificationManager: NSObject, ObservableObject {
     func scheduleFollowUpNotification(for thought: Thought, daysFromNow: Int = 2) {
         // Only schedule follow-up if the thought isn't resolved yet
         guard !thought.isResolved else { return }
+        
+        print("[Notification] Scheduling follow-up notification for thought: \(thought.id) in \(daysFromNow) days")
         
         // Create the notification content
         let content = UNMutableNotificationContent()
@@ -187,9 +191,10 @@ class NotificationManager: NSObject, ObservableObject {
     
     // Present the full-screen notification for a specific thought
     func presentFullScreenNotification(for thought: Thought) {
-        // Make sure we have a view model - either use the one provided by the app or create a new one
-        if self.thoughtViewModel == nil {
-            self.thoughtViewModel = ThoughtViewModel(dataStore: DataStore())
+        // Use the provided view model - it should already be set by the app
+        guard self.thoughtViewModel != nil else {
+            print("[Notification] ERROR: No view model available for notification!")
+            return
         }
         
         DispatchQueue.main.async {
@@ -217,17 +222,20 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
         // Extract the thought ID from the notification
         if let thoughtIDString = notification.request.content.userInfo["thoughtID"] as? String,
            let thoughtID = UUID(uuidString: thoughtIDString),
-           let dataStore = try? DataStore(),
-           let thought = findThought(withID: thoughtID, dataStore: dataStore) {
-            // Present the full-screen notification
-            presentFullScreenNotification(for: thought)
-            
-            // For an unresloved thought, schedule a follow-up notification
-            if !thought.isResolved,
-               let notificationType = notification.request.content.userInfo["notificationType"] as? String,
-               notificationType == "deadline" {
-                // Schedule a follow-up notification for 2 days later
-                scheduleFollowUpNotification(for: thought)
+           let viewModel = self.thoughtViewModel {
+            // Find the thought using the thoughtViewModel's method or direct access
+            if let thought = viewModel.thoughts.first(where: { $0.id == thoughtID }) {
+                
+                let notificationType = notification.request.content.userInfo["notificationType"] as? String ?? "unknown"
+                print("[Notification] Presenting notification for thought: \(thought.id), type: \(notificationType)")
+                // Present the full-screen notification
+                presentFullScreenNotification(for: thought)
+                
+                // For an unresloved thought, schedule a follow-up notification
+                if !thought.isResolved {
+                    // Schedule a follow-up notification for 2 days later
+                    scheduleFollowUpNotification(for: thought)
+                }
             }
             
             // Don't show the system notification since we're displaying our custom UI
@@ -240,20 +248,22 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
     
     // Handle when a notification is tapped
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        print("[Notification] Notification tapped with action: \(response.actionIdentifier)")
+        
         // Extract the thought ID from the notification
         if let thoughtIDString = response.notification.request.content.userInfo["thoughtID"] as? String,
            let thoughtID = UUID(uuidString: thoughtIDString),
-           let dataStore = try? DataStore(),
-           let thought = findThought(withID: thoughtID, dataStore: dataStore) {
-            // Present the full-screen notification
-            presentFullScreenNotification(for: thought)
-            
-            // Schedule a follow-up if this was a deadline notification and the action wasn't taken
-            if !thought.isResolved,
-               let notificationType = response.notification.request.content.userInfo["notificationType"] as? String,
-               notificationType == "deadline" {
-                // Schedule a follow-up notification for 2 days later
-                scheduleFollowUpNotification(for: thought)
+           let viewModel = self.thoughtViewModel {
+            // Find the thought using the thoughtViewModel's method or direct access
+            if let thought = viewModel.thoughts.first(where: { $0.id == thoughtID }) {
+                // Present the full-screen notification
+                presentFullScreenNotification(for: thought)
+                
+                // Schedule a follow-up if the thought isn't resolved yet
+                if !thought.isResolved {
+                    // Schedule a follow-up notification for 2 days later
+                    scheduleFollowUpNotification(for: thought)
+                }
             }
         }
         

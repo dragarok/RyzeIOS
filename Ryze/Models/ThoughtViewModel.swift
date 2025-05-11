@@ -106,8 +106,13 @@ class ThoughtViewModel: ObservableObject {
         thought.deadline = newDeadline
         dataStore.updateThought(thought)
         
-        // Reschedule the notification with the new deadline
-        NotificationManager.shared.scheduleDeadlineNotification(for: thought)
+        // Cancel any existing notifications for this thought
+        NotificationManager.shared.cancelNotification(for: thought)
+        
+        // Reschedule the notification with the new deadline after a brief delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            NotificationManager.shared.scheduleDeadlineNotification(for: thought)
+        }
         
         Task {
             await loadThoughts()
