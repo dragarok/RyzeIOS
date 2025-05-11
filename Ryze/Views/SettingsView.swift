@@ -16,8 +16,6 @@ struct SettingsView: View {
     // Settings state
     @AppStorage("useBiometricAuth") private var useBiometricAuth = false
     @AppStorage("secureDataStorage") private var secureDataStorage = true
-    @AppStorage("notificationsEnabled") private var notificationsEnabled = true
-    @AppStorage("reminderTime") private var reminderTime = 3600.0 // Default 1 hour before deadline
     
     // State for test notification
     @State private var showTestNotificationSheet = false
@@ -59,29 +57,6 @@ struct SettingsView: View {
                 }
                 
                 // Notifications section
-                Section("Notifications") {
-                    Toggle("Enable Notifications", isOn: $notificationsEnabled)
-                        .tint(.blue)
-                    
-                    if notificationsEnabled {
-                        VStack(alignment: .leading) {
-                            Text("Reminder Time Before Deadline")
-                            Slider(value: $reminderTime, in: 0...86400) {
-                                Text("Reminder Time")
-                            } minimumValueLabel: {
-                                Text("0h")
-                            } maximumValueLabel: {
-                                Text("24h")
-                            }
-                            .tint(.blue)
-                            
-                            Text(reminderTimeFormatted)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
-                
                 // Developer section (visible only in debug builds)
                 #if DEBUG
                 Section("Developer") {
@@ -183,17 +158,6 @@ struct SettingsView: View {
             return "Use Touch ID"
         case .none:
             return "Use Biometric Authentication"
-        }
-    }
-    
-    private var reminderTimeFormatted: String {
-        let hours = Int(reminderTime) / 3600
-        let minutes = (Int(reminderTime) % 3600) / 60
-        
-        if hours > 0 {
-            return "\(hours) hour\(hours > 1 ? "s" : "") \(minutes > 0 ? "\(minutes) minute\(minutes > 1 ? "s" : "")" : "") before deadline"
-        } else {
-            return "\(minutes) minute\(minutes > 1 ? "s" : "") before deadline"
         }
     }
     
