@@ -10,16 +10,18 @@ import SwiftUI
 struct FullScreenNotificationView: View {
     // The thought that has reached its deadline
     let thought: Thought
-
+    
+    // Explicit view model instead of relying on environment objects
+    let viewModel: ThoughtViewModel
+    
     // Environment objects and state variables
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var viewModel: ThoughtViewModel
     @State private var showDetails = true // Changed to true - expanded view by default
     @State private var selectedOutcome: OutcomeType? = nil
     @State private var showConfirmation = false
     @State private var showRescheduleSheet = false
     @State private var rescheduleDate = Date()
-
+    
     // Function to properly dismiss the notification
     private func closeNotification() {
         // Update the NotificationManager state
@@ -353,7 +355,6 @@ struct FullScreenNotificationView_Previews: PreviewProvider {
 
         let viewModel = ThoughtViewModel(dataStore: DataStore())
 
-        return FullScreenNotificationView(thought: mockThought)
-            .environmentObject(viewModel)
+        return FullScreenNotificationView(thought: mockThought, viewModel: viewModel)
     }
 }

@@ -89,13 +89,19 @@ class ThoughtViewModel: ObservableObject {
     }
     
     func resolveThought(_ thought: Thought, with actualOutcomeType: OutcomeType) {
-        thought.actualOutcomeType = actualOutcomeType
-        thought.isResolved = true
-        thought.resolutionDate = Date()
-        dataStore.updateThought(thought)
+        // First, ensure we're working with a thought that belongs to our context
+        let contextThought = dataStore.findThoughtByID(thought.id) ?? thought
+        
+        // Apply the updates
+        contextThought.actualOutcomeType = actualOutcomeType
+        contextThought.isResolved = true
+        contextThought.resolutionDate = Date()
+        
+        // Save the changes
+        dataStore.updateThought(contextThought)
         
         // Cancel all notifications for this thought
-        NotificationManager.shared.cancelNotification(for: thought)
+        NotificationManager.shared.cancelNotification(for: contextThought)
         
         Task {
             await loadThoughts()
@@ -103,15 +109,21 @@ class ThoughtViewModel: ObservableObject {
     }
     
     func updateThoughtDeadline(_ thought: Thought, newDeadline: Date) {
-        thought.deadline = newDeadline
-        dataStore.updateThought(thought)
+        // First, ensure we're working with a thought that belongs to our context
+        let contextThought = dataStore.findThoughtByID(thought.id) ?? thought
+        
+        // Apply the updates
+        contextThought.deadline = newDeadline
+        
+        // Save the changes
+        dataStore.updateThought(contextThought)
         
         // Cancel any existing notifications for this thought
-        NotificationManager.shared.cancelNotification(for: thought)
+        NotificationManager.shared.cancelNotification(for: contextThought)
         
         // Reschedule the notification with the new deadline after a brief delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            NotificationManager.shared.scheduleDeadlineNotification(for: thought)
+            NotificationManager.shared.scheduleDeadlineNotification(for: contextThought)
         }
         
         Task {
@@ -120,10 +132,13 @@ class ThoughtViewModel: ObservableObject {
     }
     
     func deleteThought(_ thought: Thought) {
-        // Cancel all notifications before deleting the thought
-        NotificationManager.shared.cancelNotification(for: thought)
+        // First, ensure we're working with a thought that belongs to our context
+        let contextThought = dataStore.findThoughtByID(thought.id) ?? thought
         
-        dataStore.deleteThought(thought)
+        // Cancel all notifications before deleting the thought
+        NotificationManager.shared.cancelNotification(for: contextThought)
+        
+        dataStore.deleteThought(contextThought)
         
         Task {
             await loadThoughts()

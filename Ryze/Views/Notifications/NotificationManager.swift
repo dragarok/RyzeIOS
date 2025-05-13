@@ -185,17 +185,40 @@ class NotificationManager: NSObject, ObservableObject {
     }
     
     // Find a thought by its ID
+    // Find a thought by its ID with better error handling and logging
     func findThought(withID id: UUID, dataStore: DataStore) -> Thought? {
-        return dataStore.fetchThoughts().first { $0.id == id }
+        print("[Notification] Attempting to find thought with ID: \(id)")
+        
+        // Use the findThoughtByID method if available (which will be more efficient)
+        // Otherwise fall back to the old approach
+        if let thought = dataStore.findThoughtByID(id) {
+            print("[Notification] Successfully found thought: \(thought.question)")
+            return thought
+        }
+        
+        // Fallback to the old approach if needed
+        let thoughts = dataStore.fetchThoughts()
+        print("[Notification] Found \(thoughts.count) thoughts in the data store")
+        
+        let thought = thoughts.first { $0.id == id }
+        if let thought = thought {
+            print("[Notification] Successfully found thought: \(thought.question)")
+        } else {
+            print("[Notification] WARNING: Could not find thought with ID: \(id)")
+        }
+        return thought
     }
     
     // Present the full-screen notification for a specific thought
     func presentFullScreenNotification(for thought: Thought) {
-        // Use the provided view model - it should already be set by the app
-        guard self.thoughtViewModel != nil else {
-            print("[Notification] ERROR: No view model available for notification!")
-            return
+        // We're now more tolerant of a missing view model
+        // It will be provided later when the view appears
+        if self.thoughtViewModel == nil {
+            print("[Notification] Warning: No view model available for notification yet, but proceeding anyway")
+            // The app will set it later during initialization
         }
+        
+        print("[Notification] Presenting full screen notification for thought: \(thought.question)")
         
         DispatchQueue.main.async {
             self.currentThought = thought
@@ -221,13 +244,13 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
         // Extract the thought ID from the notification
         if let thoughtIDString = notification.request.content.userInfo["thoughtID"] as? String,
-           let thoughtID = UUID(uuidString: thoughtIDString),
-           let viewModel = self.thoughtViewModel {
-            // Find the thought using the thoughtViewModel's method or direct access
-            if let thought = viewModel.thoughts.first(where: { $0.id == thoughtID }) {
-                
+           let thoughtID = UUID(uuidString: thoughtIDString) {
+            
+            // Try to find the thought using the thoughtViewModel if available
+            if let viewModel = self.thoughtViewModel, let thought = viewModel.thoughts.first(where: { $0.id == thoughtID }) {
                 let notificationType = notification.request.content.userInfo["notificationType"] as? String ?? "unknown"
                 print("[Notification] Presenting notification for thought: \(thought.id), type: \(notificationType)")
+                
                 // Present the full-screen notification
                 presentFullScreenNotification(for: thought)
                 
@@ -236,12 +259,40 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
                     // Schedule a follow-up notification for 2 days later
                     scheduleFollowUpNotification(for: thought)
                 }
+                
+                // Don't show the system notification since we're displaying our custom UI
+                completionHandler([])
+            } else {
+                // If the view model isn't available, or we can't find the thought, create a persistent data store
+                let permanentDataStore = DataStore()
+                if let thought = findThought(withID: thoughtID, dataStore: permanentDataStore) {
+                    // Create a persistent view model that will be used throughout the app lifecycle
+                    let persistentViewModel = ThoughtViewModel(dataStore: permanentDataStore)
+                    self.thoughtViewModel = persistentViewModel
+                    
+                    // Load thoughts in the background to ensure the view model is populated
+                    Task {
+                        await persistentViewModel.loadThoughts()
+                        
+                        // After loading the thoughts, find the thought in the permanent context
+                        DispatchQueue.main.async {
+                            if let permanentThought = permanentDataStore.findThoughtByID(thoughtID) {
+                                // Present the notification with the permanent thought object
+                                self.presentFullScreenNotification(for: permanentThought)
+                            }
+                        }
+                    }
+                    
+                    // Present the notification with the temporary thought for now
+                    self.presentFullScreenNotification(for: thought)
+                    completionHandler([])
+                } else {
+                    // If we still can't find the thought, show the system notification
+                    completionHandler([.banner, .sound])
+                }
             }
-            
-            // Don't show the system notification since we're displaying our custom UI
-            completionHandler([])
         } else {
-            // If we can't find the thought, show the system notification
+            // If we can't extract thought ID, show the system notification
             completionHandler([.banner, .sound])
         }
     }
@@ -252,17 +303,45 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
         
         // Extract the thought ID from the notification
         if let thoughtIDString = response.notification.request.content.userInfo["thoughtID"] as? String,
-           let thoughtID = UUID(uuidString: thoughtIDString),
-           let viewModel = self.thoughtViewModel {
-            // Find the thought using the thoughtViewModel's method or direct access
-            if let thought = viewModel.thoughts.first(where: { $0.id == thoughtID }) {
-                // Present the full-screen notification
+           let thoughtID = UUID(uuidString: thoughtIDString) {
+            
+            // Try to find the thought using the thoughtViewModel if available
+            if let viewModel = self.thoughtViewModel, let thought = viewModel.thoughts.first(where: { $0.id == thoughtID }) {
+                // Normal flow - we have the view model and can find the thought
                 presentFullScreenNotification(for: thought)
                 
                 // Schedule a follow-up if the thought isn't resolved yet
                 if !thought.isResolved {
-                    // Schedule a follow-up notification for 2 days later
                     scheduleFollowUpNotification(for: thought)
+                }
+            } else {
+                // If thoughtViewModel is nil or empty, we need to create a persistent data store
+                let permanentDataStore = DataStore()
+                if let thought = findThought(withID: thoughtID, dataStore: permanentDataStore) {
+                    // Create a persistent view model that will be used throughout the app lifecycle
+                    let persistentViewModel = ThoughtViewModel(dataStore: permanentDataStore)
+                    self.thoughtViewModel = persistentViewModel
+                    
+                    // Load thoughts in the background to ensure the view model is populated
+                    Task {
+                        await persistentViewModel.loadThoughts()
+                        
+                        // After loading the thoughts, we need to retrieve this thought from
+                        // our permanent context
+                        DispatchQueue.main.async {
+                            // Find the thought again in our permanent context
+                            if let permanentThought = permanentDataStore.findThoughtByID(thoughtID) {
+                                // Present the notification with the thought from the permanent context
+                                self.presentFullScreenNotification(for: permanentThought)
+                            }
+                        }
+                    }
+                    
+                    // This is a temporary presentation with the original thought object
+                    // Will be replaced by the permanent one after loading completes
+                    presentFullScreenNotification(for: thought)
+                    
+                    print("[Notification] Created persistent ViewModel for launched app")
                 }
             }
         }
