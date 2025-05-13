@@ -29,11 +29,14 @@ struct FullScreenNotificationView: View {
         NotificationManager.shared.currentThought = nil
         dismiss()
     }
-
+    
+    // Environment value for detecting dark mode
+    @Environment(\.colorScheme) private var colorScheme
+    
     var body: some View {
         ZStack {
-            // White background
-            Color.white.ignoresSafeArea()
+            // Dynamic background based on color scheme
+            Color(UIColor.systemBackground).ignoresSafeArea()
 
             VStack(spacing: 24) {
                 // Title and close button
@@ -231,7 +234,7 @@ struct FullScreenNotificationView: View {
             NavigationView {
                 ZStack {
                     // Use a white background
-                    Color.white
+                    Color(UIColor.systemBackground)
                         .ignoresSafeArea()
                     VStack {
                         DatePicker("New deadline", selection: $rescheduleDate, in: Date()...)
@@ -318,7 +321,7 @@ struct OutcomeSelectionRow: View {
                     .foregroundColor(.primary)
                     .padding(.vertical, 8)
                     .padding(.horizontal, 12)
-                    .background(Color.white.opacity(0.6))
+                    .background(Color(UIColor.secondarySystemBackground))
                     .cornerRadius(8)
                     .padding(.leading, 30) // Indent to align with the circle
             }
