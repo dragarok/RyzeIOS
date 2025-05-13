@@ -12,6 +12,7 @@ struct PositivityScoreChart: View {
     let animate: Bool
     
     @State private var animationProgress: Double = 0.0
+    @Environment(\.colorScheme) private var colorScheme
     
     init(thoughts: [Thought], animate: Bool = true) {
         self.thoughts = thoughts
@@ -46,43 +47,56 @@ struct PositivityScoreChart: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 28) {
             if thoughts.filter({ $0.isResolved }).isEmpty {
                 // Placeholder when no data is available
                 noDataPlaceholder
             } else {
-                // Title and description
-                VStack(alignment: .leading, spacing: 4) {
+                // Title and description with consistent styling
+                VStack(alignment: .leading, spacing: 6) {
                     Text("Positivity Score")
-                        .font(.headline)
+                        .font(.title3)
+                        .fontWeight(.medium)
                     
                     Text("This represents your brain's evolving relationship with uncertainty")
-                        .font(.caption)
+                        .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
                 
                 // Centered gauge view
                 positivityScoreGauge
                     .frame(height: 250)
-                    .padding(.vertical)
+                    .padding(.vertical, 8)
+                    .frame(maxWidth: .infinity, alignment: .center) // Added alignment center to ensure gauge is centered
                 
-                // Score explanation
-                VStack(alignment: .leading, spacing: 8) {
+                // Understanding section (similar to Legend section in OutcomeDistribution)
+                VStack(spacing: 12) {
+                    // Section title
                     Text("Understanding Your Score")
                         .font(.subheadline)
-                        .padding(.top, 4)
+                        .fontWeight(.medium)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     
+                    // Score explanation text
                     Text(getScoreExplanation())
-                        .font(.caption)
+                        .font(.callout)
                         .foregroundColor(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(UIColor.secondarySystemBackground))
+                )
+                .padding(.horizontal, 16)
+                
             }
         }
+        .padding(.vertical, 8)
         .onAppear {
             if animate {
-                withAnimation(.easeInOut(duration: 1.0)) {
+                withAnimation(.easeInOut(duration: 1.2)) {
                     animationProgress = 1.0
                 }
             } else {
@@ -105,10 +119,10 @@ struct PositivityScoreChart: View {
                     .trim(from: 0, to: 1)
                     .stroke(
                         AngularGradient(
-                            gradient: Gradient(colors: [.red, .orange, .yellow, .green, .blue, .purple]),
+                            gradient: Gradient(colors: [.red.opacity(0.8), .orange.opacity(0.8), .yellow.opacity(0.8), .green.opacity(0.8), .blue.opacity(0.8)]),
                             center: .center
                         ),
-                        style: StrokeStyle(lineWidth: 20, lineCap: .round)
+                        style: StrokeStyle(lineWidth: 16, lineCap: .round)
                     )
                     .frame(width: radius * 2, height: radius * 2)
                     .position(x: centerX, y: centerY)
@@ -119,31 +133,36 @@ struct PositivityScoreChart: View {
                     .trim(from: 0, to: animationProgress * (positivityScore / 100))
                     .stroke(
                         AngularGradient(
-                            gradient: Gradient(colors: [.red, .orange, .yellow, .green, .blue, .purple]),
+                            gradient: Gradient(colors: [.red.opacity(0.8), .orange.opacity(0.8), .yellow.opacity(0.8), .green.opacity(0.8), .blue.opacity(0.8)]),
                             center: .center
                         ),
-                        style: StrokeStyle(lineWidth: 20, lineCap: .round)
+                        style: StrokeStyle(lineWidth: 16, lineCap: .round)
                     )
                     .frame(width: radius * 2, height: radius * 2)
                     .position(x: centerX, y: centerY)
                     .rotationEffect(.degrees(-90))
                 
                 // Center score display
-                VStack(spacing: 8) {
+                VStack(alignment: .center, spacing: 6) {
                     Text("\(Int(positivityScore * animationProgress))")
                         .font(.system(size: 60, weight: .bold))
                         .foregroundColor(scoreColor)
                         .contentTransition(.numericText())
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity, alignment: .center)
                     
                     Text(scoreDescription)
-                        .font(.subheadline)
+                        .font(.callout)
+                        .fontWeight(.medium)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .center)
                 }
+                .frame(width: radius * 1.8, alignment: .center)
                 .position(x: centerX, y: centerY)
             }
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, alignment: .center)
         .aspectRatio(1, contentMode: .fit)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Positivity score gauge showing \(Int(positivityScore)) points")
@@ -151,21 +170,24 @@ struct PositivityScoreChart: View {
     }
     
     private var noDataPlaceholder: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 24) {
             Image(systemName: "gauge.medium")
-                .font(.system(size: 40))
+                .font(.system(size: 48))
                 .foregroundColor(.secondary.opacity(0.6))
             
-            Text("No positivity score available yet")
-                .font(.headline)
-                .foregroundColor(.secondary)
+            VStack(spacing: 8) {
+                Text("No positivity score available yet")
+                    .font(.headline)
+                    .foregroundColor(.primary)
                 
-            Text("Resolve thoughts to see how your expectations compare with reality")
-                .font(.caption)
-                .foregroundColor(.secondary.opacity(0.7))
-                .multilineTextAlignment(.center)
+                Text("Resolve thoughts to see how your expectations compare with reality")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
+            }
         }
-        .frame(maxWidth: .infinity, minHeight: 200)
+        .frame(maxWidth: .infinity, minHeight: 240)
         .padding()
     }
     

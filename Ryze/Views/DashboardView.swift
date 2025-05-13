@@ -109,7 +109,6 @@ struct DashboardView: View {
                     } else {
                         // Show insights charts when data is available
                         InsightsChartView(viewModel: viewModel)
-                            .padding(.horizontal)
                     }
                     
                     Spacer()

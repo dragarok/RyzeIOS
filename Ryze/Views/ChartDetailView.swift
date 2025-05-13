@@ -34,7 +34,7 @@ struct ChartDetailView: View {
                 VStack(spacing: 16) {
                     switch chartType {
                     case .expectationsVsReality:
-                        ExpectationVsRealityChart(thoughts: viewModel.resolvedThoughts, animate: animateChart)
+                        ExpectationVsRealityChart(thoughts: viewModel.resolvedThoughts)
                             .padding(.horizontal)
                         
                         // Data table for comparison

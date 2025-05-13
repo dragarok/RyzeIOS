@@ -59,6 +59,25 @@ struct ContentView: View {
             NewThoughtView(viewModel: thoughtViewModel)
         }
         .onAppear {
+            // Set the tab bar appearance
+            let appearance = UITabBarAppearance()
+            appearance.configureWithDefaultBackground()
+            
+            // Adjust tab bar size and clarity
+            let itemAppearance = UITabBarItemAppearance(style: .stacked)
+            
+            // Make tab bar icons bigger
+            itemAppearance.normal.iconColor = UIColor.systemGray
+            itemAppearance.normal.titleTextAttributes = [.font: UIFont.systemFont(ofSize: 12, weight: .medium)]
+            
+            // Make selected items more noticeable
+            itemAppearance.selected.iconColor = UIColor.systemBlue
+            itemAppearance.selected.titleTextAttributes = [.font: UIFont.systemFont(ofSize: 12, weight: .semibold)]
+            
+            appearance.stackedLayoutAppearance = itemAppearance
+            UITabBar.appearance().standardAppearance = appearance
+            UITabBar.appearance().scrollEdgeAppearance = appearance
+            
             // Load data when the app appears
             Task {
                 await thoughtViewModel.loadThoughts()
