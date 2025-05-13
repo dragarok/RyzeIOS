@@ -13,14 +13,6 @@ struct OutcomeDistributionChart: View {
     let animate: Bool
     
     @State private var animationProgress: Double = 0.0
-    @State private var selectedChartType: ChartDisplayType = .sideBySide
-    
-    enum ChartDisplayType: String, CaseIterable, Identifiable {
-        case sideBySide = "Side by Side"
-        case overlapping = "Overlapping"
-        
-        var id: Self { self }
-    }
     
     init(thoughts: [Thought], animate: Bool = true) {
         self.thoughts = thoughts
@@ -53,24 +45,8 @@ struct OutcomeDistributionChart: View {
                         .foregroundColor(.secondary)
                 }
                 
-                // Chart type toggle
-                Picker("Display", selection: $selectedChartType) {
-                    ForEach(ChartDisplayType.allCases) { type in
-                        Text(type.rawValue).tag(type)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal)
-                
-                // Distribution chart based on selected type
-                if selectedChartType == .sideBySide {
-                    sideBySidePieCharts
-                } else {
-                    overlappingDonutChart
-                }
-                
-                // Legend
-                distributionLegend
+                // Separate donut charts
+                separateDonutCharts
             }
         }
         .onAppear {
@@ -86,10 +62,9 @@ struct OutcomeDistributionChart: View {
     
     // MARK: - Chart Components
     
-    // Side by Side Pie Charts
-    private var sideBySidePieCharts: some View {
+    private var separateDonutCharts: some View {
         HStack(alignment: .center, spacing: 8) {
-            // Expected outcomes pie chart
+            // Expected outcomes donut chart
             VStack {
                 Text("Expected")
                     .font(.subheadline)
@@ -128,7 +103,7 @@ struct OutcomeDistributionChart: View {
                 .frame(width: 1)
                 .padding(.vertical, 20)
             
-            // Actual outcomes pie chart
+            // Actual outcomes donut chart
             VStack {
                 Text("Actual")
                     .font(.subheadline)
@@ -162,103 +137,6 @@ struct OutcomeDistributionChart: View {
             .frame(maxWidth: .infinity)
         }
         .padding()
-    }
-    
-    // Overlapping Donut Chart
-    private var overlappingDonutChart: some View {
-        ZStack {
-            // Outer ring (actual outcomes)
-            Chart(chartData.filter { $0.actualCount > 0 }) { data in
-                SectorMark(
-                    angle: .value("Count", Double(data.actualCount) * animationProgress),
-                    innerRadius: .ratio(0.6),
-                    angularInset: 1
-                )
-                .cornerRadius(5)
-                .foregroundStyle(data.type.color)
-            }
-            
-            // Inner ring (expected outcomes)
-            Chart(chartData.filter { $0.expectedCount > 0 }) { data in
-                SectorMark(
-                    angle: .value("Count", Double(data.expectedCount) * animationProgress),
-                    innerRadius: .ratio(0.8),
-                    angularInset: 1
-                )
-                .cornerRadius(3)
-                .foregroundStyle(data.type.color.opacity(0.6))
-            }
-            
-            // Center label
-            VStack(spacing: 4) {
-                Text("Expected")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                
-                Text("vs")
-                    .font(.caption2.bold())
-                    .foregroundColor(.primary)
-                
-                Text("Actual")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-            }
-            .padding(8)
-            .background(
-                Circle()
-                    .fill(Color(.systemBackground))
-                    .shadow(color: .black.opacity(0.1), radius: 1, x: 0, y: 1)
-            )
-        }
-        .frame(height: 250)
-        .padding()
-    }
-    
-    // Legend for the distribution charts
-    private var distributionLegend: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Outcome Types")
-                .font(.caption)
-                .foregroundColor(.secondary)
-            
-            VStack(alignment: .leading, spacing: 6) {
-                ForEach(chartData) { data in
-                    HStack(spacing: 12) {
-                        // Color indicator
-                        Circle()
-                            .fill(data.type.color)
-                            .frame(width: 10, height: 10)
-                        
-                        // Outcome type
-                        Text(data.type.displayName)
-                            .font(.caption2)
-                        
-                        Spacer()
-                        
-                        // Expected percentage
-                        HStack(spacing: 2) {
-                            Text("Expected:")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                            
-                            Text("\(Int(data.expectedPercentage))%")
-                                .font(.caption2.bold())
-                        }
-                        
-                        // Actual percentage
-                        HStack(spacing: 2) {
-                            Text("Actual:")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                            
-                            Text("\(Int(data.actualPercentage))%")
-                                .font(.caption2.bold())
-                        }
-                    }
-                }
-            }
-        }
-        .padding(.horizontal)
     }
     
     private var noDataPlaceholder: some View {
