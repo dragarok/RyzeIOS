@@ -10,15 +10,15 @@ import Charts
 
 struct InsightsChartView: View {
     let viewModel: ThoughtViewModel
-    @State private var selectedChartType: ChartType = .expectationsVsReality
+    @State private var selectedChartType: ChartType = .outcomeDistribution
     @State private var selectedChart: String? = nil
     @State private var animateCharts: Bool = false
     
     // Chart type enum
     enum ChartType: String, CaseIterable, Identifiable {
+        case outcomeDistribution = "Outcome Distribution"
         case expectationsVsReality = "Expectations vs. Reality"
         case fearAccuracyTrend = "Fear Accuracy Trend"
-        case outcomeDistribution = "Outcome Distribution"
         case positivityScore = "Positivity Score"
         
         var id: Self { self }

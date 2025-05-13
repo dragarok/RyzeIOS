@@ -1,39 +1,22 @@
-//
-//  FearAccuracyTrendChart.swift
-//  Ryze
-//
-//  Created for Ryze app on 13/05/2025.
-//
-
 import SwiftUI
 import Charts
 
 struct FearAccuracyTrendChart: View {
     let thoughts: [Thought]
     let animate: Bool
-    
+
     @State private var animationProgress: Double = 0.0
-    @State private var showCumulative: Bool = false
-    
+
     init(thoughts: [Thought], animate: Bool = true) {
         self.thoughts = thoughts
         self.animate = animate
     }
-    
+
     // Computed chart data
     private var trendData: [FearAccuracyData] {
         ChartDataProvider.generateFearAccuracyData(thoughts: thoughts)
     }
-    
-    // Calculated average accuracy
-    private var averageAccuracy: Double {
-        if trendData.isEmpty {
-            return 0.0
-        }
-        let sum = trendData.reduce(0.0) { $0 + $1.accuracyPercentage }
-        return sum / Double(trendData.count)
-    }
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             if trendData.isEmpty {
@@ -44,20 +27,12 @@ struct FearAccuracyTrendChart: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Fear Accuracy Trend")
                         .font(.headline)
-                    
+
                     Text("Track how your ability to predict outcomes improves over time")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                
-                // Toggle for view type
-                Picker("View", selection: $showCumulative) {
-                    Text("Monthly").tag(false)
-                    Text("Cumulative").tag(true)
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal)
-                
+
                 // Line chart
                 accuracyTrendChart
                     .frame(height: 250)
@@ -74,9 +49,9 @@ struct FearAccuracyTrendChart: View {
             }
         }
     }
-    
+
     // MARK: - Chart Components
-    
+
     private var accuracyTrendChart: some View {
         Chart {
             ForEach(trendData) { data in
@@ -97,34 +72,17 @@ struct FearAccuracyTrendChart: View {
                     }
                 }
             }
-            
-            // Add a single reference line at 50%
-            RuleMark(
-                y: .value("Baseline", 50)
-            )
-            .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 5]))
-            .foregroundStyle(.gray.opacity(0.5))
-            .annotation(alignment: .leading, spacing: 0) {
-                Text("50%")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 4)
-                    .background(Color(.systemBackground).opacity(0.8))
-            }
         }
         .chartYScale(domain: 0...100)
         .chartYAxis {
             AxisMarks(position: .leading, values: [0, 25, 50, 75, 100]) { value in
-                if let doubleValue = value.as(Double.self), doubleValue != 50 { // Skip 50% here to avoid duplication
-                    AxisGridLine()
-                    AxisTick()
-                    AxisValueLabel {
+                AxisGridLine()
+                AxisTick()
+                AxisValueLabel {
+                    if let doubleValue = value.as(Double.self) {
                         Text("\(Int(doubleValue))%")
-                            .font(.caption)
+                            .font(.caption) // Consistent font for all Y-axis labels
                     }
-                } else {
-                    AxisGridLine()
-                    AxisTick()
                 }
             }
         }
@@ -135,17 +93,17 @@ struct FearAccuracyTrendChart: View {
             }
         }
     }
-    
+
     private var noDataPlaceholder: some View {
         VStack(spacing: 20) {
             Image(systemName: "chart.line.uptrend.xyaxis")
                 .font(.system(size: 40))
                 .foregroundColor(.secondary.opacity(0.6))
-            
+
             Text("No trend data available yet")
                 .font(.headline)
                 .foregroundColor(.secondary)
-                
+
             Text("Track thoughts over time to see how your prediction accuracy improves")
                 .font(.caption)
                 .foregroundColor(.secondary.opacity(0.7))
