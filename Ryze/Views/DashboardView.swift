@@ -16,10 +16,7 @@ struct DashboardView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 30) {
-                    Text("Your Thought Analytics")
-                        .font(.title2)
-                        .fontWeight(.medium)
-                        .padding(.horizontal)
+                    // Remove the analytics text to avoid overlapping with navigation title
                     
                     HStack(spacing: 16) {
                         // Active thoughts counter with subtle animation
@@ -109,7 +106,6 @@ struct DashboardView: View {
                     } else {
                         // Show insights charts when data is available
                         InsightsChartView(viewModel: viewModel)
-                            .padding(.horizontal)
                     }
                     
                     Spacer()

@@ -34,6 +34,14 @@ struct RyzeApp: App {
         
         // Detect available biometric authentication types
         authManager.detectBiometricType()
+        
+        // Set the view model in the notification manager as early as possible
+        notificationManager.thoughtViewModel = viewModel
+        
+        // Load thoughts from data store immediately
+        Task {
+            await viewModel.loadThoughts()
+        }
     }
     
     var body: some Scene {
@@ -46,15 +54,27 @@ struct RyzeApp: App {
                     .onAppear {
                         // Request notification permissions when the app launches
                         notificationManager.requestAuthorization()
-                        // Assign the view model to the notification manager
+                        
+                        // Double-check the view model is assigned to notification manager
+                        // This ensures it's set even if the app was launched from a notification
                         notificationManager.thoughtViewModel = thoughtViewModel
                         
-                        // Check if onboarding should be shown
-                        let permanentlyHidden = UserDefaults.standard.bool(forKey: "permanentlyHideOnboarding")
-
-                        // Only show if neither completed nor permanently hidden
-                        if !hasCompletedOnboarding && !permanentlyHidden {
-                        showOnboarding = true
+                        // Make sure thoughts are loaded
+                        Task {
+                            await thoughtViewModel.loadThoughts()
+                            
+                            // If we have a pending notification from app launch, this will update with the loaded data
+                            if notificationManager.showDeadlineNotification, let thought = notificationManager.currentThought {
+                                DispatchQueue.main.async {
+                                    // Refresh the notification with loaded data
+                                    notificationManager.showDeadlineNotification = true
+                                }
+                            }
+                        }
+                        
+                        // Show onboarding only if it hasn't been completed yet
+                        if !hasCompletedOnboarding {
+                            showOnboarding = true
                         }
                     }
                 

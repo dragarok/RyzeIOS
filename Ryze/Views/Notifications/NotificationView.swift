@@ -12,6 +12,22 @@ struct NotificationView: View {
     @StateObject private var notificationManager = NotificationManager.shared
     @EnvironmentObject private var viewModel: ThoughtViewModel
     
+    // Default initializer
+    init() {}
+    
+    private func createNotificationViewModel() -> ThoughtViewModel {
+        // Create a permanent DataStore that will persist data
+        let permanentDataStore = DataStore()
+        let newViewModel = ThoughtViewModel(dataStore: permanentDataStore)
+        
+        // Register with the notification manager for future use
+        if notificationManager.thoughtViewModel == nil {
+            notificationManager.thoughtViewModel = newViewModel
+        }
+        
+        return notificationManager.thoughtViewModel ?? newViewModel
+    }
+    
     var body: some View {
         // This is a container view that only shows content when notifications trigger
         ZStack {
@@ -22,8 +38,7 @@ struct NotificationView: View {
             // Show full-screen notification when triggered
             if notificationManager.showDeadlineNotification,
                let thought = notificationManager.currentThought {
-                FullScreenNotificationView(thought: thought)
-                    .environmentObject(notificationManager.thoughtViewModel ?? viewModel)
+                FullScreenNotificationView(thought: thought, viewModel: createNotificationViewModel())
                     .transition(.opacity)
                     .zIndex(100) // Ensure it appears on top of everything
             }
@@ -41,7 +56,6 @@ extension View {
         ZStack {
             self
             NotificationView()
-                .environmentObject(ThoughtViewModel(dataStore: DataStore())) // Ensure ThoughtViewModel is available
         }
     }
 }

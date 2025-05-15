@@ -13,6 +13,7 @@ struct ThoughtDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var selectedOutcomeType: OutcomeType?
     @State private var showingResolveSheet = false
+    @State private var showingDeleteConfirmation = false
     @State private var showOutcomeAnimation = false
     @Namespace private var animation
     
@@ -165,16 +166,42 @@ struct ThoughtDetailView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     if !thought.isResolved {
-                        Button {
-                            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                                showingResolveSheet = true
+                        HStack(spacing: 16) {
+                            // Edit button - now using NavigationLink
+                            NavigationLink {
+                                NewThoughtView(viewModel: viewModel)
+                                    .onAppear {
+                                        // Prepare the form for editing when the view appears
+                                        viewModel.prepareForEditing(thought)
+                                    }
+                                    .onDisappear {
+                                        // Reset form when navigating away
+                                        viewModel.resetForm()
+                                    }
+                            } label: {
+                                Image(systemName: "pencil")
+                                    .foregroundColor(.blue)
                             }
-                        } label: {
-                            Label("Resolve", systemImage: "checkmark.circle")
-                                .foregroundColor(thought.expectedOutcomeType?.color ?? .blue)
-                                .font(.body.weight(.medium))
+                            
+                            // Delete button
+                            Button {
+                                showingDeleteConfirmation = true
+                            } label: {
+                                Image(systemName: "trash")
+                                    .foregroundColor(.red)
+                            }
+                            
+                            // Resolve button
+                            Button {
+                                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                                    showingResolveSheet = true
+                                }
+                            } label: {
+                                Label("Resolve", systemImage: "checkmark.circle")
+                                    .foregroundColor(thought.expectedOutcomeType?.color ?? .blue)
+                                    .font(.body.weight(.medium))
+                            }
                         }
-                        .foregroundColor(.blue)
                     }
                 }
                 
@@ -186,6 +213,15 @@ struct ThoughtDetailView: View {
             }
             .sheet(isPresented: $showingResolveSheet) {
                 resolveView
+            }
+            .confirmationDialog("Delete this thought?", isPresented: $showingDeleteConfirmation, titleVisibility: .visible) {
+                Button("Delete", role: .destructive) {
+                    viewModel.deleteThought(thought)
+                    dismiss()
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This action cannot be undone.")
             }
         }
     }

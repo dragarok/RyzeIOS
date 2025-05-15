@@ -62,6 +62,30 @@ final class Outcome {
     }
 }
 
+// MARK: - Reminder Time Enum
+enum ReminderTimeOption: Int, CaseIterable, Identifiable {
+    case oneHour = 3600
+    case threeHours = 10800
+    case twelveHours = 43200
+    case oneDay = 86400
+    
+    var id: Int { self.rawValue }
+    
+    var displayName: String {
+        switch self {
+        case .oneHour: return "1 hour"
+        case .threeHours: return "3 hours"
+        case .twelveHours: return "12 hours"
+        case .oneDay: return "1 day"
+        }
+    }
+    
+    static func fromSeconds(_ seconds: Double) -> ReminderTimeOption {
+        let roundedSeconds = Int(seconds)
+        return self.allCases.min(by: { abs($0.rawValue - roundedSeconds) < abs($1.rawValue - roundedSeconds) }) ?? .oneHour
+    }
+}
+
 // MARK: - Thought Model
 @Model
 final class Thought {
@@ -73,6 +97,8 @@ final class Thought {
     var deadline: Date?
     var actualOutcomeTypeRawValue: String?
     var isResolved: Bool
+    var resolutionDate: Date?
+    var lastNotificationDate: Date?
     
     var expectedOutcomeType: OutcomeType? {
         get { 

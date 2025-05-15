@@ -50,6 +50,21 @@ class DataStore {
     }
     
     func fetchThoughts() -> [Thought] {
+        // Always use the context on the main thread to avoid threading issues
+        if Thread.isMainThread {
+            return fetchThoughtsInternal()
+        } else {
+            // If we're not on the main thread, dispatch synchronously to the main thread
+            var result: [Thought] = []
+            DispatchQueue.main.sync {
+                result = fetchThoughtsInternal()
+            }
+            return result
+        }
+    }
+    
+    // Internal implementation that should only be called on the main thread
+    private func fetchThoughtsInternal() -> [Thought] {
         let descriptor = FetchDescriptor<Thought>(sortBy: [SortDescriptor(\Thought.createdAt, order: .reverse)])
         do {
             return try context.fetch(descriptor)
@@ -60,6 +75,21 @@ class DataStore {
     }
     
     func fetchActiveThoughts() -> [Thought] {
+        // Always use the context on the main thread to avoid threading issues
+        if Thread.isMainThread {
+            return fetchActiveThoughtsInternal()
+        } else {
+            // If we're not on the main thread, dispatch synchronously to the main thread
+            var result: [Thought] = []
+            DispatchQueue.main.sync {
+                result = fetchActiveThoughtsInternal()
+            }
+            return result
+        }
+    }
+    
+    // Internal implementation that should only be called on the main thread
+    private func fetchActiveThoughtsInternal() -> [Thought] {
         let predicate = #Predicate<Thought> { thought in
             thought.isResolved == false
         }
@@ -75,6 +105,21 @@ class DataStore {
     }
     
     func fetchResolvedThoughts() -> [Thought] {
+        // Always use the context on the main thread to avoid threading issues
+        if Thread.isMainThread {
+            return fetchResolvedThoughtsInternal()
+        } else {
+            // If we're not on the main thread, dispatch synchronously to the main thread
+            var result: [Thought] = []
+            DispatchQueue.main.sync {
+                result = fetchResolvedThoughtsInternal()
+            }
+            return result
+        }
+    }
+    
+    // Internal implementation that should only be called on the main thread
+    private func fetchResolvedThoughtsInternal() -> [Thought] {
         let predicate = #Predicate<Thought> { thought in
             thought.isResolved == true
         }
@@ -106,9 +151,53 @@ class DataStore {
         saveContext()
     }
     
+    func deleteOutcome(_ outcome: Outcome) {
+        context.delete(outcome)
+        saveContext()
+    }
+    
     // MARK: - Helper Methods
+    func findThoughtByID(_ id: UUID) -> Thought? {
+        if Thread.isMainThread {
+            return findThoughtByIDInternal(id)
+        } else {
+            var result: Thought? = nil
+            DispatchQueue.main.sync {
+                result = findThoughtByIDInternal(id)
+            }
+            return result
+        }
+    }
+    
+    // Internal implementation, must be called on main thread
+    private func findThoughtByIDInternal(_ id: UUID) -> Thought? {
+        let predicate = #Predicate<Thought> { thought in
+            thought.id == id
+        }
+        let descriptor = FetchDescriptor<Thought>(predicate: predicate)
+        
+        do {
+            let thoughts = try context.fetch(descriptor)
+            return thoughts.first
+        } catch {
+            print("Failed to find thought by ID: \(error.localizedDescription)")
+            return nil
+        }
+    }
     
     private func saveContext() {
+        // Ensure we're on the main thread for all SwiftData operations
+        if Thread.isMainThread {
+            saveContextInternal()
+        } else {
+            // If we're not on the main thread, dispatch synchronously to the main thread
+            DispatchQueue.main.sync {
+                saveContextInternal()
+            }
+        }
+    }
+    
+    private func saveContextInternal() {
         do {
             try context.save()
         } catch {

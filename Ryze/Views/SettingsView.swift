@@ -7,7 +7,7 @@
 
 import SwiftUI
 import LocalAuthentication
-
+import UIKit
 struct SettingsView: View {
     // Environment objects
     @EnvironmentObject private var thoughtViewModel: ThoughtViewModel
@@ -16,8 +16,6 @@ struct SettingsView: View {
     // Settings state
     @AppStorage("useBiometricAuth") private var useBiometricAuth = false
     @AppStorage("secureDataStorage") private var secureDataStorage = true
-    @AppStorage("notificationsEnabled") private var notificationsEnabled = true
-    @AppStorage("reminderTime") private var reminderTime = 3600.0 // Default 1 hour before deadline
     
     // State for test notification
     @State private var showTestNotificationSheet = false
@@ -59,36 +57,6 @@ struct SettingsView: View {
                 }
                 
                 // Notifications section
-                Section("Notifications") {
-                    Toggle("Enable Notifications", isOn: $notificationsEnabled)
-                        .tint(.blue)
-                    
-                    if notificationsEnabled {
-                        VStack(alignment: .leading) {
-                            Text("Reminder Time Before Deadline")
-                            Slider(value: $reminderTime, in: 0...86400) {
-                                Text("Reminder Time")
-                            } minimumValueLabel: {
-                                Text("0h")
-                            } maximumValueLabel: {
-                                Text("24h")
-                            }
-                            .tint(.blue)
-                            
-                            Text(reminderTimeFormatted)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        
-                        Button(action: {
-                            showTestNotificationSheet = true
-                        }) {
-                            Label("Test Notification", systemImage: "bell.badge")
-                        }
-                        .padding(.vertical, 8)
-                    }
-                }
-                
                 // Developer section (visible only in debug builds)
                 #if DEBUG
                 Section("Developer") {
@@ -99,6 +67,59 @@ struct SettingsView: View {
                     }
                 }
                 #endif
+                
+                // Manifesto section (direct access)
+                Section {
+                    Button(action: openManifesto) {
+                        HStack {
+                            Text("Manifesto")
+                            Spacer()
+                            Image(systemName: "arrow.up.right.square")
+                                .foregroundColor(.blue)
+                        }
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+                
+                // Resources section
+                Section("Resources") {
+                    NavigationLink(destination: ExampleView()) {
+                        HStack {
+                            Text("See an example")
+                        }
+                    }
+
+                    Button(action: openMainWebsite) {
+                        HStack {
+                            Text("MaitreyaTools Website")
+                            Spacer()
+                            Image(systemName: "arrow.up.right.square")
+                                .foregroundColor(.blue)
+                        }
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    
+                    Button(action: openRyzePage) {
+                        HStack {
+                            Text("Ryze App Page")
+                            Spacer()
+                            Image(systemName: "arrow.up.right.square")
+                                .foregroundColor(.blue)
+                        }
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    
+                    Button(action: openGitHubRepo) {
+                        HStack {
+                            Text("GitHub Source Code")
+                            Spacer()
+                            Image(systemName: "arrow.up.right.square")
+                                .foregroundColor(.blue)
+                        }
+                    }
+                    .buttonStyle(PlainButtonStyle())
+
+                }
                 
                 // About section
                 Section("About") {
@@ -114,7 +135,7 @@ struct SettingsView: View {
                     NavigationLink(destination: aboutView) {
                         Text("About Ryze")
                     }
-                    
+
                     NavigationLink(destination: privacyView) {
                         Text("Privacy")
                     }
@@ -184,17 +205,6 @@ struct SettingsView: View {
             return "Use Touch ID"
         case .none:
             return "Use Biometric Authentication"
-        }
-    }
-    
-    private var reminderTimeFormatted: String {
-        let hours = Int(reminderTime) / 3600
-        let minutes = (Int(reminderTime) % 3600) / 60
-        
-        if hours > 0 {
-            return "\(hours) hour\(hours > 1 ? "s" : "") \(minutes > 0 ? "\(minutes) minute\(minutes > 1 ? "s" : "")" : "") before deadline"
-        } else {
-            return "\(minutes) minute\(minutes > 1 ? "s" : "") before deadline"
         }
     }
     
@@ -298,6 +308,32 @@ struct SettingsView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 }
+
+    // MARK: - Website Link Handlers
+    
+    private func openManifesto() {
+        if let url = URL(string: "https://maitreyatools.com/ryze/manifesto/") {
+            UIApplication.shared.open(url)
+        }
+    }
+    
+    private func openMainWebsite() {
+        if let url = URL(string: "https://maitreyatools.com/") {
+            UIApplication.shared.open(url)
+        }
+    }
+    
+    private func openRyzePage() {
+        if let url = URL(string: "https://maitreyatools.com/ryze/") {
+            UIApplication.shared.open(url)
+        }
+    }
+    
+    private func openGitHubRepo() {
+        if let url = URL(string: "https://github.com/dragarok/RyzeIOS") {
+            UIApplication.shared.open(url)
+        }
+    }
 
 #Preview {
     SettingsView()

@@ -2,7 +2,7 @@
 //  ChartDetailView.swift
 //  Ryze
 //
-//  Created for Ryze app on 13/04/2025.
+//  Created for Ryze app on 13/05/2025.
 //
 
 import SwiftUI
@@ -14,19 +14,6 @@ struct ChartDetailView: View {
     @State private var animateChart = false
     @Environment(\.dismiss) private var dismiss
     
-    // Computed properties for chart data
-    private var outcomesData: [OutcomeComparisonData] {
-        AnalyticsManager.generateOutcomeComparisonData(thoughts: viewModel.resolvedThoughts)
-    }
-    
-    private var trendData: [FearAccuracyData] {
-        AnalyticsManager.generateFearAccuracyData(thoughts: viewModel.resolvedThoughts)
-    }
-    
-    private var positivityScore: Double {
-        AnalyticsManager.calculatePositivityScore(thoughts: viewModel.resolvedThoughts)
-    }
-    
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
@@ -36,7 +23,7 @@ struct ChartDetailView: View {
                         .font(.title)
                         .fontWeight(.bold)
                     
-                    Text(getChartDescription())
+                    Text(ChartMessages.getChartDescription(for: chartType.messageType))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -46,33 +33,29 @@ struct ChartDetailView: View {
                 // Chart card
                 VStack(spacing: 16) {
                     switch chartType {
-                    case .stackedBar:
-                        largeOutcomeComparisonChart
-                            .frame(height: 300)
+                    case .expectationsVsReality:
+                        ExpectationVsRealityChart(thoughts: viewModel.resolvedThoughts)
                             .padding(.horizontal)
                         
                         // Data table for comparison
-                        outcomeComparisonTable
+                        expectationVsRealityDataTable
                         
-                    case .trendLine:
-                        largeFearAccuracyTrendChart
-                            .frame(height: 300)
+                    case .fearAccuracyTrend:
+                        FearAccuracyTrendChart(thoughts: viewModel.resolvedThoughts, animate: animateChart)
                             .padding(.horizontal)
                         
                         // Monthly accuracy data
-                        accuracyTrendTable
+                        fearAccuracyDataTable
                         
-                    case .pieChart:
-                        largeOutcomeDistributionChart
-                            .frame(height: 300)
+                    case .outcomeDistribution:
+                        OutcomeDistributionChart(thoughts: viewModel.resolvedThoughts, animate: animateChart)
                             .padding(.horizontal)
                         
                         // Distribution percentages
-                        outcomeDistributionTable
+                        outcomeDistributionDataTable
                         
                     case .positivityScore:
-                        largePositivityScoreView
-                            .frame(height: 300)
+                        PositivityScoreChart(thoughts: viewModel.resolvedThoughts, animate: animateChart)
                             .padding(.horizontal)
                         
                         // Score explanation
@@ -93,7 +76,7 @@ struct ChartDetailView: View {
                         .font(.headline)
                         .foregroundColor(.orange)
                     
-                    Text(getPositiveMessage())
+                    Text(ChartMessages.getReflectionMessage(for: chartType.messageType))
                         .font(.body)
                         .foregroundColor(.primary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -142,182 +125,12 @@ struct ChartDetailView: View {
         }
     }
     
-    // MARK: - Chart Components
-    
-    // Large Stacked Bar Chart: Expectations vs Reality
-    private var largeOutcomeComparisonChart: some View {
-        Chart {
-            ForEach(outcomesData) { data in
-                BarMark(
-                    x: .value("Outcome", data.outcomeType.displayName),
-                    y: .value("Count", animateChart ? data.expectedCount : 0)
-                )
-                .foregroundStyle(data.outcomeType.color.opacity(0.7))
-                .annotation(position: .top) {
-                    if data.expectedCount > 0 {
-                        Text("\(data.expectedCount)")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .position(by: .value("Type", "Expected"))
-                
-                BarMark(
-                    x: .value("Outcome", data.outcomeType.displayName),
-                    y: .value("Count", animateChart ? data.actualCount : 0)
-                )
-                .foregroundStyle(data.outcomeType.color)
-                .annotation(position: .top) {
-                    if data.actualCount > 0 {
-                        Text("\(data.actualCount)")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .position(by: .value("Type", "Actual"))
-            }
-        }
-        .chartForegroundStyleScale(["Expected": Color.gray.opacity(0.5), "Actual": Color.blue.opacity(0.8)])
-        .chartLegend(position: .bottom, alignment: .center)
-        .chartYAxis {
-            AxisMarks(position: .leading)
-        }
-        .chartYAxis {
-            AxisMarks { _ in
-                AxisGridLine()
-                AxisTick()
-                AxisValueLabel()
-            }
-        }
-    }
-    
-    // Large Line Chart: Fear Accuracy Trend
-    private var largeFearAccuracyTrendChart: some View {
-        Chart {
-            ForEach(trendData) { data in
-                LineMark(
-                    x: .value("Month", data.month),
-                    y: .value("Accuracy %", animateChart ? data.accuracyPercentage : 0)
-                )
-                .symbol(Circle())
-                .symbolSize(animateChart ? 50 : 0)
-                .lineStyle(StrokeStyle(lineWidth: 3))
-                .foregroundStyle(Gradient(colors: [.blue, .purple]))
-                .interpolationMethod(.catmullRom)
-                .annotation(position: .top) {
-                    Text("\(Int(data.accuracyPercentage))%")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            
-            if !trendData.isEmpty {
-                RuleMark(
-                    y: .value("Average", 50)
-                )
-                .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 5]))
-                .foregroundStyle(.gray.opacity(0.5))
-                .annotation(alignment: .leading) {
-                    Text("50%")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-            }
-        }
-        .chartYScale(domain: 0...100)
-        .chartYAxis {
-            AxisMarks { value in
-                AxisGridLine()
-                AxisTick()
-                AxisValueLabel {
-                    if let doubleValue = value.as(Double.self) {
-                        Text("\(Int(doubleValue))%")
-                            .font(.caption)
-                    }
-                }
-            }
-        }
-    }
-    
-    // Large Pie Chart: Outcome Distribution
-    private var largeOutcomeDistributionChart: some View {
-        let actualOutcomes = outcomesData.filter { $0.actualCount > 0 }
-        let totalCount = actualOutcomes.reduce(0) { $0 + $1.actualCount }
-        
-        return Chart(actualOutcomes) { data in
-            SectorMark(
-                angle: .value("Count", animateChart ? data.actualCount : 0),
-                innerRadius: .ratio(0.6),
-                angularInset: 1
-            )
-            .cornerRadius(5)
-            .foregroundStyle(data.outcomeType.color)
-            .annotation(position: .overlay) {
-                if data.actualCount > 0 {
-                    VStack {
-                        Text(data.outcomeType.displayName)
-                            .font(.caption)
-                            .bold()
-                        
-                        if totalCount > 0 {
-                            Text("\(Int((Double(data.actualCount) / Double(totalCount)) * 100))%")
-                                .font(.caption2)
-                        }
-                    }
-                    .foregroundColor(.white)
-                    .shadow(radius: 1)
-                }
-            }
-        }
-    }
-    
-    // Large Positivity Score Gauge
-    private var largePositivityScoreView: some View {
-        VStack {
-            ZStack {
-                Circle()
-                    .trim(from: 0, to: 1)
-                    .stroke(
-                        AngularGradient(
-                            gradient: Gradient(colors: [.red, .orange, .yellow, .green, .blue, .purple]),
-                            center: .center
-                        ),
-                        style: StrokeStyle(lineWidth: 30, lineCap: .round)
-                    )
-                    .frame(width: 250, height: 250)
-                    .rotationEffect(.degrees(90))
-                    .opacity(0.2)
-                
-                Circle()
-                    .trim(from: 0, to: animateChart ? positivityScore / 100 : 0)
-                    .stroke(
-                        AngularGradient(
-                            gradient: Gradient(colors: [.red, .orange, .yellow, .green, .blue, .purple]),
-                            center: .center
-                        ),
-                        style: StrokeStyle(lineWidth: 30, lineCap: .round)
-                    )
-                    .frame(width: 250, height: 250)
-                    .rotationEffect(.degrees(90))
-                
-                VStack(spacing: 8) {
-                    Text("\(Int(positivityScore))")
-                        .font(.system(size: 60, weight: .bold))
-                        .foregroundColor(getScoreColor(score: positivityScore))
-                    
-                    Text(getScoreDescription(score: positivityScore))
-                        .font(.headline)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                }
-            }
-        }
-    }
-    
     // MARK: - Data Tables and Explanations
     
-    private var outcomeComparisonTable: some View {
-        VStack(alignment: .leading, spacing: 8) {
+    private var expectationVsRealityDataTable: some View {
+        let outcomesData = ChartDataProvider.generateOutcomeComparisonData(thoughts: viewModel.resolvedThoughts)
+        
+        return VStack(alignment: .leading, spacing: 8) {
             Text("Outcome Comparison")
                 .font(.headline)
                 .padding(.top, 8)
@@ -386,8 +199,10 @@ struct ChartDetailView: View {
         .padding(.horizontal)
     }
     
-    private var accuracyTrendTable: some View {
-        VStack(alignment: .leading, spacing: 8) {
+    private var fearAccuracyDataTable: some View {
+        let trendData = ChartDataProvider.generateFearAccuracyData(thoughts: viewModel.resolvedThoughts)
+        
+        return VStack(alignment: .leading, spacing: 8) {
             Text("Monthly Accuracy")
                 .font(.headline)
                 .padding(.top, 8)
@@ -429,8 +244,8 @@ struct ChartDetailView: View {
                         Text("\(Int(data.accuracyPercentage))%")
                             .frame(width: 100)
                         
-                        Text(getAccuracyRating(percentage: data.accuracyPercentage))
-                            .foregroundColor(getAccuracyColor(percentage: data.accuracyPercentage))
+                        Text(ChartMessages.getAccuracyRating(percentage: data.accuracyPercentage))
+                            .foregroundColor(ChartMessages.getAccuracyColor(percentage: data.accuracyPercentage))
                             .frame(width: 100)
                     }
                     .padding(.vertical, 4)
@@ -448,9 +263,8 @@ struct ChartDetailView: View {
         .padding(.horizontal)
     }
     
-    private var outcomeDistributionTable: some View {
-        let actualOutcomes = outcomesData.filter { $0.actualCount > 0 }
-        let totalCount = actualOutcomes.reduce(0) { $0 + $1.actualCount }
+    private var outcomeDistributionDataTable: some View {
+        let chartData = ChartDataProvider.generatePieChartData(thoughts: viewModel.resolvedThoughts)
         
         return VStack(alignment: .leading, spacing: 8) {
             Text("Outcome Distribution")
@@ -459,7 +273,7 @@ struct ChartDetailView: View {
             
             Divider()
             
-            if totalCount == 0 {
+            if chartData.isEmpty {
                 Text("No resolved thoughts yet to show distribution.")
                     .font(.callout)
                     .foregroundColor(.secondary)
@@ -472,12 +286,12 @@ struct ChartDetailView: View {
                         .foregroundColor(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     
-                    Text("Count")
+                    Text("Expected %")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
-                        .frame(width: 80)
+                        .frame(width: 100)
                     
-                    Text("Percentage")
+                    Text("Actual %")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .frame(width: 100)
@@ -485,22 +299,22 @@ struct ChartDetailView: View {
                 .padding(.vertical, 4)
                 
                 // Table rows
-                ForEach(actualOutcomes) { data in
+                ForEach(chartData) { data in
                     HStack {
                         HStack {
                             Circle()
-                                .fill(data.outcomeType.color)
+                                .fill(data.type.color)
                                 .frame(width: 12, height: 12)
                             
-                            Text(data.outcomeType.displayName)
+                            Text(data.type.displayName)
                                 .font(.callout)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         
-                        Text("\(data.actualCount)")
-                            .frame(width: 80)
+                        Text("\(Int(data.expectedPercentage))%")
+                            .frame(width: 100)
                         
-                        Text("\(Int((Double(data.actualCount) / Double(totalCount)) * 100))%")
+                        Text("\(Int(data.actualPercentage))%")
                             .frame(width: 100)
                     }
                     .padding(.vertical, 4)
@@ -509,7 +323,7 @@ struct ChartDetailView: View {
                 }
                 
                 // Summary
-                Text("This distribution shows where your actual outcomes landed on the spectrum from worst to best.")
+                Text("This distribution compares where you expected outcomes to land versus where they actually did.")
                     .font(.callout)
                     .foregroundColor(.secondary)
                     .padding(.top, 8)
@@ -519,7 +333,9 @@ struct ChartDetailView: View {
     }
     
     private var positivityScoreExplanation: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        let score = ChartDataProvider.calculatePositivityScore(thoughts: viewModel.resolvedThoughts)
+        
+        return VStack(alignment: .leading, spacing: 12) {
             Text("Understanding Your Score")
                 .font(.headline)
                 .padding(.top, 8)
@@ -557,7 +373,7 @@ struct ChartDetailView: View {
                 }
             }
             
-            Text("A score of 50 means your outcomes generally matched your expectations. Higher scores indicate reality consistently exceeded your fears.")
+            Text(ChartMessages.getScoreExplanation(score: score))
                 .font(.callout)
                 .foregroundColor(.secondary)
                 .padding(.top, 8)
@@ -615,56 +431,12 @@ struct ChartDetailView: View {
     
     // MARK: - Helper Methods
     
-    private func getChartDescription() -> String {
-        switch chartType {
-        case .stackedBar:
-            return "This chart compares how many times you expected each outcome type versus how many times each actually occurred."
-        case .trendLine:
-            return "This trend shows how accurately your expectations matched reality over time. Higher percentages mean reality was as good as or better than you expected."
-        case .pieChart:
-            return "This pie chart shows the distribution of your actual outcomes, revealing where reality typically lands on the spectrum from worst to best."
-        case .positivityScore:
-            return "Your positivity score measures the gap between your expectations and reality. A higher score means reality consistently exceeds your expectations."
-        }
-    }
-    
-    private func getPositiveMessage() -> String {
-        let positiveMessages: [InsightsChartView.ChartType: [String]] = [
-            .stackedBar: [
-                "When we compare our expectations to reality, we often find that our fears rarely materialize in the way we imagine. This awareness helps recalibrate our thinking.",
-                "Your brain evolved to prepare for the worst as a survival mechanism. This chart helps you see the gap between ancient instincts and modern reality.",
-                "Notice any patterns in how you predict outcomes versus what actually happens. This awareness builds your emotional intelligence over time."
-            ],
-            .trendLine: [
-                "As you continue to track your thoughts, notice how your prediction accuracy changes. Many people become more optimistic as they see evidence that outcomes are often better than feared.",
-                "This trend line represents your growing ability to distinguish between helpful caution and limiting catastrophic thinking.",
-                "Each point on this chart represents a moment of learning - a time when you challenged a fear-based thought and discovered what actually happened."
-            ],
-            .pieChart: [
-                "This distribution of outcomes shows you the true landscape of your experiences. Our minds tend to remember negative outcomes more strongly, but this chart shows the complete picture.",
-                "Looking at this distribution helps counteract 'negativity bias' - our tendency to focus on and remember negative experiences more than positive ones.",
-                "This chart represents the actual fabric of your experiences, not filtered through fear or anticipation."
-            ],
-            .positivityScore: [
-                "Your positivity score isn't about toxic positivity or ignoring real concerns. It's about calibrating your expectations to match reality more accurately.",
-                "Think of this score as your brain's operating system gradually receiving updates based on real-world data rather than ancient survival programming.",
-                "As this score changes over time, it represents your growing ability to see situations clearly rather than through a lens of fear."
-            ]
-        ]
-        
-        if let messages = positiveMessages[chartType], !messages.isEmpty {
-            return messages.randomElement()!
-        }
-        
-        return "By tracking your thoughts and outcomes, you're developing greater emotional resilience and a more balanced perspective."
-    }
-    
     private func getRelatedInsights() -> [InsightCard] {
         // Get all insights and filter to show only those related to the current chart type
         let allInsights = AnalyticsManager.generateInsights(thoughts: viewModel.resolvedThoughts)
         
         switch chartType {
-        case .stackedBar, .pieChart:
+        case .expectationsVsReality, .outcomeDistribution:
             // Return insights about outcome patterns
             return allInsights.filter { insight in
                 insight.title.contains("Pattern") ||
@@ -672,7 +444,7 @@ struct ChartDetailView: View {
                 insight.title.contains("Perspective")
             }
             
-        case .trendLine:
+        case .fearAccuracyTrend:
             // Return insights about growth or improvement
             return allInsights.filter { insight in
                 insight.title.contains("Growth") ||
@@ -684,52 +456,12 @@ struct ChartDetailView: View {
             return allInsights
         }
     }
-    
-    private func getScoreColor(score: Double) -> Color {
-        switch score {
-        case 0..<30: return .red
-        case 30..<50: return .orange
-        case 50..<70: return .yellow
-        case 70..<90: return .green
-        default: return .blue
-        }
-    }
-    
-    private func getScoreDescription(score: Double) -> String {
-        switch score {
-        case 0..<30: return "Worse than expected"
-        case 30..<50: return "Slightly worse than expected"
-        case 50..<70: return "Matches expectations"
-        case 70..<90: return "Better than expected"
-        default: return "Much better than expected"
-        }
-    }
-    
-    private func getAccuracyRating(percentage: Double) -> String {
-        switch percentage {
-        case 0..<20: return "Very Low"
-        case 20..<40: return "Low"
-        case 40..<60: return "Moderate"
-        case 60..<80: return "Good"
-        default: return "Excellent"
-        }
-    }
-    
-    private func getAccuracyColor(percentage: Double) -> Color {
-        switch percentage {
-        case 0..<20: return .red
-        case 20..<40: return .orange
-        case 40..<60: return .yellow
-        case 60..<80: return .green
-        default: return .blue
-        }
-    }
 }
 
 #Preview {
     NavigationStack {
         ChartDetailView(
-            chartType: .stackedBar,
+            chartType: .expectationsVsReality,
             viewModel: ThoughtViewModel(dataStore: DataStore())
         )
     }

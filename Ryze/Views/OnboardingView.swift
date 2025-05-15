@@ -10,7 +10,6 @@ import SwiftUI
 struct OnboardingView: View {
     @ObservedObject var viewModel: ThoughtViewModel
     @State private var currentPage = 0
-    @State private var showExampleThought = false
     @Binding var showOnboarding: Bool
 
     // Animation states
@@ -20,10 +19,6 @@ struct OnboardingView: View {
     // Page view instances
     private var mainPageViews: OnboardingMainPageViews {
         OnboardingMainPageViews(animateIcon: $animateIcon, animateText: $animateText)
-    }
-
-    private var examplePageView: OnboardingExamplePageView {
-        OnboardingExamplePageView(animateIcon: $animateIcon, animateText: $animateText)
     }
 
     var body: some View {
@@ -43,27 +38,6 @@ struct OnboardingView: View {
             .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                HStack {
-                    Button("Do not show again") {
-                        UserDefaults.standard.set(true, forKey: "permanentlyHideOnboarding")
-                        withAnimation {
-                            showOnboarding = false
-                        }
-                    }
-                    .padding()
-                    .foregroundColor(.secondary)
-
-                    Spacer()
-
-                    Button("Skip") {
-                        withAnimation {
-                            showOnboarding = false
-                        }
-                    }
-                    .padding()
-                    .foregroundColor(.secondary)
-                }
-
                 TabView(selection: $currentPage) {
                     mainPageViews.welcomePage
                         .tag(0)
@@ -73,30 +47,38 @@ struct OnboardingView: View {
 
                     mainPageViews.processPage
                         .tag(2)
-
-                    examplePageView.examplePage
-                        .tag(3)
+                    
+                    // Integrate ExampleContentView directly
+                    ExampleContentView(
+                        presentationType: .onboarding,
+                        onComplete: {
+                            // Set complete flag and close onboarding
+                            UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+                            withAnimation {
+                                showOnboarding = false
+                            }
+                        }
+                    )
+                    .tag(3)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .always))
-                .padding(.bottom, 30) // Increased from 100 to push dots lower
+                .padding(.bottom, 30)
 
-                Spacer(minLength: 20) // Reduced from 40 to balance spacing
+                Spacer(minLength: 20)
 
                 Button(action: {
                     withAnimation {
                         if currentPage < 3 {
                             currentPage += 1
                         } else {
-                            if showExampleThought {
-                                showOnboarding = false
-                            } else {
-                                showExampleThought = true
-                            }
+                            // On the final page (example page), complete onboarding
+                            UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+                            showOnboarding = false
                         }
                     }
                 }) {
                     HStack(spacing: 12) {
-                        Text(currentPage < 3 ? "Continue" : (showExampleThought ? "Get Started" : "See an Example"))
+                        Text(currentPage < 3 ? "Continue" : "Start My Journey")
                             .fontWeight(.semibold)
 
                         Image(systemName: "arrow.right")
@@ -111,13 +93,9 @@ struct OnboardingView: View {
                     )
                 }
                 .padding(.top, 8)
-                .padding(.bottom, 12) // Reduced from 50 to balance with new TabView padding
+                .padding(.bottom, 12)
                 .offset(y: animateText ? 0 : 20)
                 .opacity(animateText ? 1 : 0)
-            }
-
-            .sheet(isPresented: $showExampleThought) {
-                examplePageView.exampleThoughtView(showExampleThought: $showExampleThought, showOnboarding: $showOnboarding)
             }
         }
         .onAppear {
