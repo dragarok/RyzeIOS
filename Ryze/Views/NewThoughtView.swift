@@ -52,11 +52,8 @@ struct NewThoughtView: View {
                         Text("Cancel")
                     }
                     .foregroundColor(.blue)
-                    .padding(12)
-                    .background(Color(.systemBackground).opacity(0.8))
-                    .cornerRadius(20)
                 }
-                .padding(.top, 16)
+                .padding(.top, 12) // Moved higher up
                 .padding(.leading, 16)
                 
                 VStack(spacing: 0) {
