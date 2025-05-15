@@ -100,7 +100,7 @@ class NotificationManager: NSObject, ObservableObject {
         
         // Create the notification content
         let content = UNMutableNotificationContent()
-        content.title = "⏰ DEADLINE REACHED ⏰"
+        content.title = "⏰ DEADLINE REACHED"
         content.body = "It's time to check your thought: \(thought.question)"
         // Use a prominent notification sound
         content.sound = UNNotificationSound.defaultCritical
@@ -148,7 +148,7 @@ class NotificationManager: NSObject, ObservableObject {
         for index in 1...maxRecurringNotifications {
             // Create the notification content
             let content = UNMutableNotificationContent()
-            content.title = "⏰ REMINDER \(index)/\(maxRecurringNotifications): Thought Needs Resolution ⏰"
+            content.title = "⏰ REMINDER \(index)/\(maxRecurringNotifications): Thought Needs Resolution"
             content.body = "You haven't recorded the outcome yet: \(thought.question)"
             content.sound = UNNotificationSound.defaultCritical
             content.interruptionLevel = .timeSensitive
