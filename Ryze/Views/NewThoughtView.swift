@@ -10,6 +10,9 @@ import SwiftUI
 struct NewThoughtView: View {
     @ObservedObject var viewModel: ThoughtViewModel
     @Environment(\.dismiss) private var dismiss
+    @State private var navigateBack = false
+    @State private var showingCancelConfirmation = false
+    @FocusState private var isTextFieldFocused: Bool
     
     // View state
     @State private var currentStep = 0
@@ -21,7 +24,7 @@ struct NewThoughtView: View {
     
     var body: some View {
         NavigationStack {
-            ZStack {
+            ZStack(alignment: .topLeading) {
                 // Background color based on current step
                 Rectangle()
                     .fill(currentStep <= OutcomeType.allCases.count && currentStep > 0 ? 
@@ -29,39 +32,82 @@ struct NewThoughtView: View {
                           Color.blue.opacity(0.03))
                     .ignoresSafeArea()
                 
-                VStack {
-                // Content based on current step
-                if !showingReview {
-                    stepContent
-                        .transition(.opacity.combined(with: .move(edge: .trailing)))
-                } else {
-                    reviewContent
-                        .transition(.opacity.combined(with: .move(edge: .trailing)))
+                // Cancel button
+                Button {
+                    // If there's content, show confirmation dialog
+                    if !viewModel.newThoughtText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                       !viewModel.outcomeDescriptions.isEmpty {
+                        isTextFieldFocused = false // Dismiss keyboard
+                        showingCancelConfirmation = true
+                    } else {
+                        // If no content, just reset and return to previous tab
+                        isTextFieldFocused = false // Dismiss keyboard
+                        viewModel.resetForm()
+                        dismiss() // Always dismiss the sheet
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 14, weight: .bold))
+                        Text("Cancel")
+                    }
+                    .foregroundColor(.blue)
+                    .padding(12)
+                    .background(Color(.systemBackground).opacity(0.8))
+                    .cornerRadius(20)
                 }
+                .padding(.top, 16)
+                .padding(.leading, 16)
                 
-                Spacer()
-                
-                // Navigation buttons
-                if !showingReview {
-                    navigationButtons
-                } else {
-                    reviewButtons
-                }
-            }
-            .padding()
-            } // End ZStack
-            .navigationTitle(showingReview ? "Review" : "New Thought")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
+                VStack(spacing: 0) {
+                    // Title
+                    Text(showingReview ? "Review" : (viewModel.isEditing ? "Edit Thought" : "New Thought"))
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                        .padding(.top, 16)
+                        .padding(.bottom, 12)
+                    
+                    // Content based on current step
+                    if !showingReview {
+                        stepContent
+                            .transition(.opacity.combined(with: .move(edge: .trailing)))
+                    } else {
+                        reviewContent
+                            .transition(.opacity.combined(with: .move(edge: .trailing)))
+                    }
+                    
+                    Spacer()
+                    
+                    // Navigation buttons
+                    if !showingReview {
+                        navigationButtons
+                    } else {
+                        reviewButtons
                     }
                 }
+                .padding()
+                .padding(.top, 24) // Additional padding to account for the cancel button
             }
-            .animation(.easeInOut, value: currentStep)
-            .animation(.easeInOut, value: showingReview)
+            .navigationBarHidden(true)
+            .ignoresSafeArea(.keyboard, edges: .bottom)
+            .onTapGesture { isTextFieldFocused = false } // Dismiss keyboard when tapping outside text field
+            .confirmationDialog(
+                "Discard changes?",
+                isPresented: $showingCancelConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Discard changes", role: .destructive) {
+                    isTextFieldFocused = false // Dismiss keyboard
+                    viewModel.resetForm()
+                    dismiss() // Always dismiss the sheet
+                }
+                Button("Continue editing", role: .cancel) {}
+            } message: {
+                Text("You have unsaved changes. Are you sure you want to cancel?")
+            }
         }
+        .animation(.easeInOut, value: currentStep)
+        .animation(.easeInOut, value: showingReview)
     }
     
     // MARK: - Step Content
@@ -115,6 +161,7 @@ struct NewThoughtView: View {
             TextField("Example: Will my project be successful?", text: $viewModel.newThoughtText, axis: .vertical)
                 .font(.body)
                 .padding(16)
+                .focused($isTextFieldFocused)
                 .background(
                     RoundedRectangle(cornerRadius: 12)
                         .fill(Color(.secondarySystemBackground))
@@ -148,6 +195,7 @@ struct NewThoughtView: View {
             TextField("I would..." , text: binding, axis: .vertical)
                 .font(.body)
                 .padding(16)
+                .focused($isTextFieldFocused)
                 .background(
                     RoundedRectangle(cornerRadius: 12)
                         .fill(outcomeType.color.opacity(0.15))
@@ -394,10 +442,12 @@ struct NewThoughtView: View {
             }
             
             Button(action: {
+                isTextFieldFocused = false // Dismiss keyboard
                 viewModel.createNewThought()
+                // Dismiss the sheet after saving in all cases
                 dismiss()
             }) {
-                Text("Save")
+                Text(viewModel.isEditing ? "Update" : "Save")
                     .fontWeight(.medium)
                     .padding(.vertical, 16)
                     .frame(maxWidth: .infinity)

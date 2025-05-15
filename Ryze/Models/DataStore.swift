@@ -151,9 +151,12 @@ class DataStore {
         saveContext()
     }
     
-    // MARK: - Helper Methods
+    func deleteOutcome(_ outcome: Outcome) {
+        context.delete(outcome)
+        saveContext()
+    }
     
-    // Find a thought in this DataStore by its ID (useful for cross-DataStore operations)
+    // MARK: - Helper Methods
     func findThoughtByID(_ id: UUID) -> Thought? {
         if Thread.isMainThread {
             return findThoughtByIDInternal(id)

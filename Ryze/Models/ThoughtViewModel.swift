@@ -61,23 +61,55 @@ class ThoughtViewModel: ObservableObject {
         guard !newThoughtText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         guard selectedExpectedOutcome != nil else { return }
         
-        // Create the new thought
-        let thought = Thought(question: newThoughtText)
-        thought.deadline = selectedDeadline
-        thought.expectedOutcomeType = selectedExpectedOutcome
-        
-        // Create outcomes for each filled out description
-        for (type, description) in outcomeDescriptions where !description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            let outcome = Outcome(type: type, description: description)
-            dataStore.saveOutcome(outcome, for: thought)
-        }
-        
-        // Save the thought
-        dataStore.saveThought(thought)
-        
-        // Schedule a notification for the thought's deadline
-        if thought.deadline != nil {
-            NotificationManager.shared.scheduleDeadlineNotification(for: thought)
+        if isEditing, let existingThought = currentThought {
+            // Update existing thought
+            let contextThought = dataStore.findThoughtByID(existingThought.id) ?? existingThought
+            
+            // Apply updates
+            contextThought.question = newThoughtText
+            contextThought.deadline = selectedDeadline
+            contextThought.expectedOutcomeType = selectedExpectedOutcome
+            
+            // Remove old outcomes and create new ones
+            if let outcomes = contextThought.outcomes {
+                for outcome in outcomes {
+                    dataStore.deleteOutcome(outcome)
+                }
+            }
+            
+            // Add new outcomes
+            for (type, description) in outcomeDescriptions where !description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                let outcome = Outcome(type: type, description: description)
+                dataStore.saveOutcome(outcome, for: contextThought)
+            }
+            
+            // Save the updated thought
+            dataStore.updateThought(contextThought)
+            
+            // Update notifications if deadline changed
+            NotificationManager.shared.cancelNotification(for: contextThought)
+            if contextThought.deadline != nil {
+                NotificationManager.shared.scheduleDeadlineNotification(for: contextThought)
+            }
+        } else {
+            // Create the new thought
+            let thought = Thought(question: newThoughtText)
+            thought.deadline = selectedDeadline
+            thought.expectedOutcomeType = selectedExpectedOutcome
+            
+            // Create outcomes for each filled out description
+            for (type, description) in outcomeDescriptions where !description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                let outcome = Outcome(type: type, description: description)
+                dataStore.saveOutcome(outcome, for: thought)
+            }
+            
+            // Save the thought
+            dataStore.saveThought(thought)
+            
+            // Schedule a notification for the thought's deadline
+            if thought.deadline != nil {
+                NotificationManager.shared.scheduleDeadlineNotification(for: thought)
+            }
         }
         
         // Reset the form
@@ -189,6 +221,29 @@ class ThoughtViewModel: ObservableObject {
         }.count
         
         return pastDeadlineCount
+    }
+    
+    // Prepare the form for editing an existing thought
+    func prepareForEditing(_ thought: Thought) {
+        // Ensure we're working with a thought that belongs to our context
+        let contextThought = dataStore.findThoughtByID(thought.id) ?? thought
+        
+        // Load the thought data into the form
+        newThoughtText = contextThought.question
+        selectedExpectedOutcome = contextThought.expectedOutcomeType
+        selectedDeadline = contextThought.deadline ?? Date().addingTimeInterval(86400)
+        
+        // Load outcomes
+        outcomeDescriptions = [:]
+        if let outcomes = contextThought.outcomes {
+            for outcome in outcomes {
+                outcomeDescriptions[outcome.type] = outcome.outcomeDescription
+            }
+        }
+        
+        // Set editing state
+        currentThought = contextThought
+        isEditing = true
     }
     
     func resetForm() {
