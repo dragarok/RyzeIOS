@@ -108,6 +108,16 @@ struct SettingsView: View {
                         }
                     }
                     .buttonStyle(PlainButtonStyle())
+                    
+                    Button(action: openGitHubRepo) {
+                        HStack {
+                            Text("GitHub Source Code")
+                            Spacer()
+                            Image(systemName: "arrow.up.right.square")
+                                .foregroundColor(.blue)
+                        }
+                    }
+                    .buttonStyle(PlainButtonStyle())
 
                 }
                 
@@ -315,6 +325,12 @@ struct SettingsView: View {
     
     private func openRyzePage() {
         if let url = URL(string: "https://maitreyatools.com/ryze/") {
+            UIApplication.shared.open(url)
+        }
+    }
+    
+    private func openGitHubRepo() {
+        if let url = URL(string: "https://github.com/dragarok/RyzeIOS") {
             UIApplication.shared.open(url)
         }
     }
