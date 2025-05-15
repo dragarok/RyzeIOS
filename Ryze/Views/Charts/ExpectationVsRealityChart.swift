@@ -4,13 +4,15 @@ import Charts
 struct ExpectationVsRealityChart: View {
     let thoughts: [Thought]
     let animate: Bool
+    let showHeader: Bool
     
     @State private var animationProgress: Double = 0.0
     @Environment(\.colorScheme) private var colorScheme
     
-    init(thoughts: [Thought], animate: Bool = true) {
+    init(thoughts: [Thought], animate: Bool = true, showHeader: Bool = true) {
         self.thoughts = thoughts
         self.animate = animate
+        self.showHeader = showHeader
     }
     
     private var chartData: [ExpectationToRealityData] {
@@ -37,15 +39,17 @@ struct ExpectationVsRealityChart: View {
             if chartData.isEmpty {
                 noDataPlaceholder
             } else {
-                // Title and description with consistent styling
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Expectations vs. Reality")
-                        .font(.title3)
-                        .fontWeight(.medium)
-                    
-                    Text("Showing what actually happened when you expected each outcome")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                // Only show title and description if showHeader is true
+                if showHeader {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Expectations vs. Reality")
+                            .font(.title3)
+                            .fontWeight(.medium)
+                        
+                        Text("Showing what actually happened when you expected each outcome")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
                 }
                 
                 // Refined bar chart
@@ -106,7 +110,7 @@ struct ExpectationVsRealityChart: View {
                     .font(.callout)
             }
         }
-        .frame(height: 300)
+        .frame(height: 240)
         .padding(.vertical, 8)
     }
     

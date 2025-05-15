@@ -10,13 +10,15 @@ import SwiftUI
 struct PositivityScoreChart: View {
     let thoughts: [Thought]
     let animate: Bool
+    let showHeader: Bool
     
     @State private var animationProgress: Double = 0.0
     @Environment(\.colorScheme) private var colorScheme
     
-    init(thoughts: [Thought], animate: Bool = true) {
+    init(thoughts: [Thought], animate: Bool = true, showHeader: Bool = true) {
         self.thoughts = thoughts
         self.animate = animate
+        self.showHeader = showHeader
     }
     
     // Computed positivity score
@@ -52,20 +54,22 @@ struct PositivityScoreChart: View {
                 // Placeholder when no data is available
                 noDataPlaceholder
             } else {
-                // Title and description with consistent styling
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Positivity Score")
-                        .font(.title3)
-                        .fontWeight(.medium)
-                    
-                    Text("This represents your brain's evolving relationship with uncertainty")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                // Only show title and description if showHeader is true
+                if showHeader {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Positivity Score")
+                            .font(.title3)
+                            .fontWeight(.medium)
+                        
+                        Text("This represents your brain's evolving relationship with uncertainty")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
                 }
                 
                 // Centered gauge view
                 positivityScoreGauge
-                    .frame(height: 250)
+                    .frame(height: 240)
                     .padding(.vertical, 8)
                     .frame(maxWidth: .infinity, alignment: .center) // Added alignment center to ensure gauge is centered
                 

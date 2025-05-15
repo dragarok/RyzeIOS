@@ -11,13 +11,15 @@ import Charts
 struct OutcomeDistributionChart: View {
     let thoughts: [Thought]
     let animate: Bool
+    let showHeader: Bool
     
     @State private var animationProgress: Double = 0.0
     @Environment(\.colorScheme) private var colorScheme
     
-    init(thoughts: [Thought], animate: Bool = true) {
+    init(thoughts: [Thought], animate: Bool = true, showHeader: Bool = true) {
         self.thoughts = thoughts
         self.animate = animate
+        self.showHeader = showHeader
     }
     
     // Computed chart data
@@ -36,22 +38,21 @@ struct OutcomeDistributionChart: View {
                 // Placeholder when no data is available
                 noDataPlaceholder
             } else {
-                // Title and description
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Outcome Distribution")
-                        .font(.title3)
-                        .fontWeight(.medium)
-                    
-                    Text("Compare your expected outcomes with what actually happened")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                // Only show title and description if showHeader is true
+                if showHeader {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Outcome Distribution")
+                            .font(.title3)
+                            .fontWeight(.medium)
+                        
+                        Text("Compare your expected outcomes with what actually happened")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
                 }
                 
                 // Separate donut charts with legends
                 refinedDonutCharts
-                
-                // Insight message at the bottom
-                insightMessage
             }
         }
         .padding(.vertical, 8)
@@ -168,16 +169,6 @@ struct OutcomeDistributionChart: View {
             
             Spacer()
         }
-    }
-    
-    private var insightMessage: some View {
-        Text("Looking at this distribution helps counteract 'negativity bias' - our tendency to focus on and remember negative experiences more than positive ones.")
-            .font(.callout)
-            .foregroundColor(.secondary)
-            .multilineTextAlignment(.leading)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 16)
-            .padding(.top, 12)
     }
     
     private var noDataPlaceholder: some View {

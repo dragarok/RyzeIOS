@@ -4,13 +4,15 @@ import Charts
 struct FearAccuracyTrendChart: View {
     let thoughts: [Thought]
     let animate: Bool
+    let showHeader: Bool
 
     @State private var animationProgress: Double = 0.0
     @Environment(\.colorScheme) private var colorScheme
 
-    init(thoughts: [Thought], animate: Bool = true) {
+    init(thoughts: [Thought], animate: Bool = true, showHeader: Bool = true) {
         self.thoughts = thoughts
         self.animate = animate
+        self.showHeader = showHeader
     }
 
     // Computed chart data
@@ -24,20 +26,22 @@ struct FearAccuracyTrendChart: View {
                 // Placeholder when no data is available
                 noDataPlaceholder
             } else {
-                // Title and description with consistent styling
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Fear Accuracy Trend")
-                        .font(.title3)
-                        .fontWeight(.medium)
+                // Only show title and description if showHeader is true
+                if showHeader {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Fear Accuracy Trend")
+                            .font(.title3)
+                            .fontWeight(.medium)
 
-                    Text("Track how your ability to predict outcomes improves over time")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        Text("Track how your ability to predict outcomes improves over time")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
                 }
 
                 // Refined line chart
                 refinedTrendChart
-                    .frame(height: 250)
+                    .frame(height: 240)
                     .padding(.vertical, 8)
                 
                 // Add a compact legend

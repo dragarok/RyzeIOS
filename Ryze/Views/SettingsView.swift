@@ -7,7 +7,7 @@
 
 import SwiftUI
 import LocalAuthentication
-
+import UIKit
 struct SettingsView: View {
     // Environment objects
     @EnvironmentObject private var thoughtViewModel: ThoughtViewModel
@@ -68,6 +68,49 @@ struct SettingsView: View {
                 }
                 #endif
                 
+                // Manifesto section (direct access)
+                Section {
+                    Button(action: openManifesto) {
+                        HStack {
+                            Text("Manifesto")
+                            Spacer()
+                            Image(systemName: "arrow.up.right.square")
+                                .foregroundColor(.blue)
+                        }
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+                
+                // Resources section
+                Section("Resources") {
+                    NavigationLink(destination: ExampleView()) {
+                        HStack {
+                            Text("See an example")
+                        }
+                    }
+
+                    Button(action: openMainWebsite) {
+                        HStack {
+                            Text("MaitreyaTools Website")
+                            Spacer()
+                            Image(systemName: "arrow.up.right.square")
+                                .foregroundColor(.blue)
+                        }
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    
+                    Button(action: openRyzePage) {
+                        HStack {
+                            Text("Ryze App Page")
+                            Spacer()
+                            Image(systemName: "arrow.up.right.square")
+                                .foregroundColor(.blue)
+                        }
+                    }
+                    .buttonStyle(PlainButtonStyle())
+
+                }
+                
                 // About section
                 Section("About") {
                     VStack(alignment: .leading, spacing: 4) {
@@ -83,12 +126,6 @@ struct SettingsView: View {
                         Text("About Ryze")
                     }
 
-                    NavigationLink(destination: ExampleView()) {
-                        HStack {
-                            Text("See an example")
-                        }
-                    }
-                    
                     NavigationLink(destination: privacyView) {
                         Text("Privacy")
                     }
@@ -261,6 +298,26 @@ struct SettingsView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 }
+
+    // MARK: - Website Link Handlers
+    
+    private func openManifesto() {
+        if let url = URL(string: "https://maitreyatools.com/ryze/manifesto/") {
+            UIApplication.shared.open(url)
+        }
+    }
+    
+    private func openMainWebsite() {
+        if let url = URL(string: "https://maitreyatools.com/") {
+            UIApplication.shared.open(url)
+        }
+    }
+    
+    private func openRyzePage() {
+        if let url = URL(string: "https://maitreyatools.com/ryze/") {
+            UIApplication.shared.open(url)
+        }
+    }
 
 #Preview {
     SettingsView()

@@ -341,12 +341,23 @@ struct NewThoughtView: View {
                     showingReview = true
                 }
             }) {
-                if currentStep == totalSteps - 1 {
-                    Text("Review")
-                        .fontWeight(.medium)
-                } else {
-                    Text("Next")
-                        .fontWeight(.medium)
+                HStack {
+                    if currentStep == totalSteps - 1 {
+                        Text("Review")
+                            .fontWeight(.medium)
+                    } else if currentStep > 0 && currentStep <= OutcomeType.allCases.count {
+                        // We're on an outcome page (steps 1-6)
+                        let outcomeType = OutcomeType.allCases[currentStep - 1]
+                        let outcomeText = viewModel.outcomeDescriptions[outcomeType] ?? ""
+                        
+                        // Show "Skip" if the text field is empty
+                        Text(outcomeText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Skip" : "Next")
+                            .fontWeight(.medium)
+                    } else {
+                        Text("Next")
+                            .fontWeight(.medium)
+                    }
+                    Image(systemName: "arrow.right")
                 }
             }
             .disabled(currentStep == 0 && viewModel.newThoughtText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -355,7 +366,7 @@ struct NewThoughtView: View {
             .foregroundColor(.white)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(currentStep == 0 && viewModel.newThoughtText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 
+                    .fill(currentStep == 0 && viewModel.newThoughtText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?
                          Color.gray : 
                          (currentStep <= OutcomeType.allCases.count && currentStep > 0 ? 
                           OutcomeType.allCases[currentStep - 1].color : .blue))

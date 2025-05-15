@@ -17,10 +17,10 @@ struct InsightsChartView: View {
     
     // Chart type enum
     enum ChartType: String, CaseIterable, Identifiable {
-        case outcomeDistribution = "Outcome Distribution"
-        case expectationsVsReality = "Expectations vs. Reality"
-        case fearAccuracyTrend = "Fear Accuracy Trend"
-        case positivityScore = "Positivity Score"
+        case outcomeDistribution = "PieChart"
+        case expectationsVsReality = "BarChart"
+        case fearAccuracyTrend = "Trend"
+        case positivityScore = "Score"
         
         var id: Self { self }
         
@@ -42,6 +42,29 @@ struct InsightsChartView: View {
             case .positivityScore: return .positivityScore
             }
         }
+        
+        // Add chart title and description
+        var title: String {
+            switch self {
+            case .outcomeDistribution: return "Outcome Distribution"
+            case .expectationsVsReality: return "Expectations vs. Reality"
+            case .fearAccuracyTrend: return "Fear Accuracy Trend"
+            case .positivityScore: return "Positivity Score"
+            }
+        }
+        
+        var description: String {
+            switch self {
+            case .outcomeDistribution: 
+                return "Compare your expected outcomes with what actually happened"
+            case .expectationsVsReality: 
+                return "Showing what actually happened when you expected each outcome"
+            case .fearAccuracyTrend: 
+                return "Track how your ability to predict outcomes improves over time"
+            case .positivityScore: 
+                return "This represents your brain's evolving relationship with uncertainty"
+            }
+        }
     }
     
     // Computed properties for insights
@@ -56,34 +79,41 @@ struct InsightsChartView: View {
                 // Refined custom tab bar
                 customTabBar
                 
-                // Chart container
+                // Chart container with fixed height
                 ZStack {
                     RoundedRectangle(cornerRadius: 16)
                         .fill(Color(UIColor.secondarySystemBackground))
                         .shadow(color: .black.opacity(0.05), radius: 3, x: 0, y: 1)
                     
-                    VStack(alignment: .leading, spacing: 16) {
-                        // Display the selected chart type
-                        switch selectedChartType {
-                        case .outcomeDistribution:
-                            OutcomeDistributionChart(thoughts: viewModel.resolvedThoughts, animate: animateCharts)
-                                .padding(.horizontal, 8)
-                            
-                        case .expectationsVsReality:
-                            ExpectationVsRealityChart(thoughts: viewModel.resolvedThoughts)
-                                .padding(.horizontal, 8)
-                            
-                        case .fearAccuracyTrend:
-                            FearAccuracyTrendChart(thoughts: viewModel.resolvedThoughts, animate: animateCharts)
-                                .padding(.horizontal, 8)
-                            
-                        case .positivityScore:
-                            PositivityScoreChart(thoughts: viewModel.resolvedThoughts, animate: animateCharts)
-                                .padding(.horizontal, 8)
+                    // Use our standardized chart container
+                    VStack(alignment: .leading) {
+                        ChartContainerView(
+                            title: selectedChartType.title,
+                            description: selectedChartType.description
+                        ) {
+                            // Display the selected chart type
+                            switch selectedChartType {
+                            case .outcomeDistribution:
+                                OutcomeDistributionChart(thoughts: viewModel.resolvedThoughts, animate: animateCharts, showHeader: false)
+                                    .padding(.horizontal, 8)
+                                
+                            case .expectationsVsReality:
+                                ExpectationVsRealityChart(thoughts: viewModel.resolvedThoughts, animate: animateCharts, showHeader: false)
+                                    .padding(.horizontal, 8)
+                                
+                            case .fearAccuracyTrend:
+                                FearAccuracyTrendChart(thoughts: viewModel.resolvedThoughts, animate: animateCharts, showHeader: false)
+                                    .padding(.horizontal, 8)
+                                
+                            case .positivityScore:
+                                PositivityScoreChart(thoughts: viewModel.resolvedThoughts, animate: animateCharts, showHeader: false)
+                                    .padding(.horizontal, 8)
+                            }
                         }
                     }
                     .padding(16)
                 }
+                .frame(height: 550) // Fixed height for all chart containers
             }
             .padding(.horizontal)
             

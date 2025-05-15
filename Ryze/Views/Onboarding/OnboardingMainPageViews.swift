@@ -82,6 +82,11 @@ struct OnboardingMainPageViews {
 
                     Text("Our minds evolved to prepare for danger, but this often leads to unnecessary anxiety")
                         .font(.headline)
+                        
+                    Text("Read our full Manifesto in Settings to learn more about overcoming fear-based thinking")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.top, 2)
                         .multilineTextAlignment(.center)
                         .foregroundColor(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
