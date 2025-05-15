@@ -118,24 +118,24 @@ Ryze is an iOS application designed to help users break free from fear-based thi
 
 **Deliverable**: Emotionally engaging onboarding that creates personal connection ✅
 ### Version 0.9: Testing & Performance
-- [ ] **Quality Assurance**
-  - [ ] Implement comprehensive error handling
-  - [ ] Add analytics for app usage (That can be turned on deliberately in settings to make app usage better)
-  - [ ] Unit tests for core models
-  - [ ] UI tests for critical flows
-  - [ ] Conduct thorough testing across devices
-  - [ ] Fix identified bugs and issues
+- [x] **Quality Assurance**
+  - [x] Implement comprehensive error handling
+  - [x] Add analytics for app usage (That can be turned on deliberately in settings to make app usage better)
+  - [x] Unit tests for core models
+  - [x] UI tests for critical flows
+  - [x] Conduct thorough testing across devices
+  - [x] Fix identified bugs and issues
 
 **Deliverable**: Stable, performant application ready for beta testing
 
 ### Version 1.0: Release Candidate
-- [ ] **Release Preparation**
-  - [ ] Final polish and refinement
+- [x] **Release Preparation**
+  - [x] Final polish and refinement
   - [ ] Complete App Store assets and metadata
-  - [ ] Ensure accessibility compliance
-  - [ ] Prepare privacy policy and terms
-  - [ ] Create app website and support information
-  - [ ] Complete documentation
+  - [x] Ensure accessibility compliance
+  - [x] Prepare privacy policy and terms
+  - [x] Create app website and support information
+  - [x] Complete documentation
     - Maintain README.md
     - [ ] Code documentation
     - Architecture decisions
@@ -143,8 +143,8 @@ Ryze is an iOS application designed to help users break free from fear-based thi
 **Deliverable**: Complete app ready for App Store submission
 
 ## LATER ENHANCEMENTS
-- [ ] Handle missed notification
-- [ ] Cleaning up notification on reschedule or done
+- [x] Handle missed notification
+- [x] Cleaning up notification on reschedule or done
 - [ ] Add data export functionality
 - [ ] Adding pin when faceid doesnt work but not phone's default pin
 - [ ] Add subtle haptic feedback
@@ -175,16 +175,3 @@ Ryze is an iOS application designed to help users break free from fear-based thi
     - Multiple check-in notifications prior to deadline
     - Periodic updates for long-term deadlines
   - [ ] Advanced analytics and insights
-
-## Technical Considerations
-
-- [ ] **Extensibility Planning**
-  - [ ] Ensure data models can accommodate future changes
-  - [ ] Use protocols and interfaces for flexibility
-  - [ ] Document extension points
-
-- [ ] **Architecture Decisions**
-  - [ ] Follow MVVM or similar architecture pattern
-  - [ ] Use SwiftUI for UI components
-  - [ ] Implement dependency injection for testability
-  - [ ] Design for offline-first functionalitys
