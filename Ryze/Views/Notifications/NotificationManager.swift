@@ -27,6 +27,13 @@ class NotificationManager: NSObject, ObservableObject {
     private let deadlineCategoryId = "THOUGHT_DEADLINE"
     private let followUpCategoryId = "THOUGHT_FOLLOWUP"
     
+    // Maximum number of recurring notifications to schedule
+    private let maxRecurringNotifications = 10
+    
+    // Notification interval in minutes (for development)
+    // Will be changed to days in production
+    private let notificationIntervalMinutes = 2
+    
     // Delegate for UNUserNotificationCenter
     private override init() {
         super.init()
@@ -121,49 +128,65 @@ class NotificationManager: NSObject, ObservableObject {
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
                 print("Error scheduling notification: \(error.localizedDescription)")
+            } else {
+                // Schedule recurring follow-up notifications starting from the deadline
+                self.scheduleRecurringNotifications(for: thought, startDate: deadline)
             }
         }
+    }
+    
+    // Schedule multiple recurring notifications for an unresolved thought
+    func scheduleRecurringNotifications(for thought: Thought, startDate: Date) {
+        // Only schedule recurring notifications if the thought isn't resolved yet
+        guard !thought.isResolved else { return }
+        
+        print("[Notification] Scheduling \(maxRecurringNotifications) recurring notifications for thought: \(thought.id)")
+        
+        // Schedule up to maxRecurringNotifications notifications at fixed intervals
+        let timestamp = Date().timeIntervalSince1970
+        
+        for index in 1...maxRecurringNotifications {
+            // Create the notification content
+            let content = UNMutableNotificationContent()
+            content.title = "⏰ REMINDER \(index)/\(maxRecurringNotifications): Thought Needs Resolution ⏰"
+            content.body = "You haven't recorded the outcome yet: \(thought.question)"
+            content.sound = UNNotificationSound.defaultCritical
+            content.interruptionLevel = .timeSensitive
+            content.categoryIdentifier = followUpCategoryId
+            content.badge = NSNumber(value: index)
+            
+            // Store the thought ID, notification type, and index
+            content.userInfo = [
+                "thoughtID": thought.id.uuidString,
+                "notificationType": "followup",
+                "notificationIndex": index,
+                "timestamp": timestamp
+            ]
+            
+            // Create a trigger for the next interval from the start date
+            // Using minutes for development purposes (will be changed to days)
+            let intervalMinutes = notificationIntervalMinutes * index
+            let triggerDate = Calendar.current.date(byAdding: .minute, value: intervalMinutes, to: startDate) ?? Date()
+            let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: triggerDate)
+            let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+            
+            // Create a unique identifier for this follow-up notification that includes the index
+            let identifier = "thought-followup-\(thought.id.uuidString)-\(index)-\(timestamp)"
+            let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+            
+            // Schedule the notification
+            UNUserNotificationCenter.current().add(request) { error in
+                if let error = error {
+                    print("Error scheduling recurring notification \(index): \(error.localizedDescription)")
+                }
+            }
+        }
+        
+        // Update the last notification date to now
+        thought.lastNotificationDate = Date()
     }
     
     // Schedule a follow-up notification for unresolved thoughts
-    func scheduleFollowUpNotification(for thought: Thought, daysFromNow: Int = 2) {
-        // Only schedule follow-up if the thought isn't resolved yet
-        guard !thought.isResolved else { return }
-        
-        print("[Notification] Scheduling follow-up notification for thought: \(thought.id) in \(daysFromNow) days")
-        
-        // Create the notification content
-        let content = UNMutableNotificationContent()
-        content.title = "⏰ REMINDER: Thought Needs Resolution ⏰"
-        content.body = "You haven't recorded the outcome yet: \(thought.question)"
-        content.sound = UNNotificationSound.defaultCritical
-        content.interruptionLevel = .timeSensitive
-        content.categoryIdentifier = followUpCategoryId
-        
-        // Store the thought ID and notification type
-        content.userInfo = [
-            "thoughtID": thought.id.uuidString,
-            "notificationType": "followup",
-            "timestamp": Date().timeIntervalSince1970
-        ]
-        
-        // Create a trigger for X days from now
-        let triggerDate = Calendar.current.date(byAdding: .day, value: daysFromNow, to: Date()) ?? Date()
-        let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: triggerDate)
-        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
-        
-        // Create a unique identifier for this follow-up notification
-        let identifier = "thought-followup-\(thought.id.uuidString)-\(Date().timeIntervalSince1970)"
-        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
-        
-        // Schedule the notification
-        UNUserNotificationCenter.current().add(request) { error in
-            if let error = error {
-                print("Error scheduling follow-up notification: \(error.localizedDescription)")
-            }
-        }
-    }
-    
     // Cancel all notifications for a specific thought
     func cancelNotification(for thought: Thought) {
         // Get pending notification requests
@@ -254,14 +277,11 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
                 // Present the full-screen notification
                 presentFullScreenNotification(for: thought)
                 
-                // For an unresloved thought, schedule a follow-up notification
-                if !thought.isResolved {
-                    // Schedule a follow-up notification for 2 days later
-                    scheduleFollowUpNotification(for: thought)
-                }
-                
                 // Don't show the system notification since we're displaying our custom UI
                 completionHandler([])
+                
+                // Update the last notification date
+                thought.lastNotificationDate = Date()
             } else {
                 // If the view model isn't available, or we can't find the thought, create a persistent data store
                 let permanentDataStore = DataStore()
@@ -310,10 +330,8 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
                 // Normal flow - we have the view model and can find the thought
                 presentFullScreenNotification(for: thought)
                 
-                // Schedule a follow-up if the thought isn't resolved yet
-                if !thought.isResolved {
-                    scheduleFollowUpNotification(for: thought)
-                }
+                // Update the last notification date
+                thought.lastNotificationDate = Date()
             } else {
                 // If thoughtViewModel is nil or empty, we need to create a persistent data store
                 let permanentDataStore = DataStore()

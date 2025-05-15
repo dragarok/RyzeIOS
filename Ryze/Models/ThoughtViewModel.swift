@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import UIKit
 
 // Make Thought conform to Sendable to fix warnings
 extension Array: @unchecked Sendable where Element: AnyObject {}
@@ -100,7 +101,7 @@ class ThoughtViewModel: ObservableObject {
         // Save the changes
         dataStore.updateThought(contextThought)
         
-        // Cancel all notifications for this thought
+        // Now that the thought is resolved, cancel all notifications for it
         NotificationManager.shared.cancelNotification(for: contextThought)
         
         Task {
@@ -121,7 +122,7 @@ class ThoughtViewModel: ObservableObject {
         // Cancel any existing notifications for this thought
         NotificationManager.shared.cancelNotification(for: contextThought)
         
-        // Reschedule the notification with the new deadline after a brief delay
+        // Reschedule the notifications with the new deadline after a brief delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             NotificationManager.shared.scheduleDeadlineNotification(for: contextThought)
         }
@@ -154,22 +155,41 @@ class ThoughtViewModel: ObservableObject {
         for thought in activeThoughts {
             if let deadline = thought.deadline, deadline < now, !thought.isResolved {
                 // This thought's deadline has passed and it's not resolved
-                // Schedule a follow-up notification if needed
+                // If it doesn't have any notifications or last notification was a while ago, reschedule
                 
-                // We would typically check when the last notification was sent
-                // but for simplicity, we'll just check if it's been at least 2 days since the deadline
-                let twoDaysAgo = Calendar.current.date(byAdding: .day, value: -2, to: now) ?? now
-                
-                if deadline < twoDaysAgo {
-                    // It's been at least 2 days since the deadline passed
-                    // Schedule a follow-up notification
-                    NotificationManager.shared.scheduleFollowUpNotification(for: thought)
+                if thought.lastNotificationDate == nil || 
+                   (thought.lastNotificationDate != nil && 
+                    Calendar.current.dateComponents([.minute], from: thought.lastNotificationDate!, to: now).minute ?? 0 > 10) {
+                    
+                    print("[ViewModel] Detected passed deadline for thought: \(thought.id) - scheduling recurring notifications")
+                    
+                    // Cancel any existing notifications first
+                    NotificationManager.shared.cancelNotification(for: thought)
+                    
+                    // Schedule new set of recurring notifications starting from now
+                    NotificationManager.shared.scheduleRecurringNotifications(for: thought, startDate: now)
                 }
             }
+        }
+        
+        // Update the app icon badge with the number of thoughts past deadline
+        let pastDeadlineCount = getPastDeadlineCount()
+        DispatchQueue.main.async {
+            UIApplication.shared.applicationIconBadgeNumber = pastDeadlineCount
         }
     }
     
     // MARK: - Helper Methods
+    // Get the count of unresolved thoughts past their deadline
+    func getPastDeadlineCount() -> Int {
+        let now = Date()
+        let pastDeadlineCount = activeThoughts.filter { thought in
+            guard let deadline = thought.deadline else { return false }
+            return deadline < now && !thought.isResolved
+        }.count
+        
+        return pastDeadlineCount
+    }
     
     func resetForm() {
         newThoughtText = ""
