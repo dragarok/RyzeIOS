@@ -30,9 +30,8 @@ class NotificationManager: NSObject, ObservableObject {
     // Maximum number of recurring notifications to schedule
     private let maxRecurringNotifications = 10
     
-    // Notification interval in minutes (for development)
-    // Will be changed to days in production
-    private let notificationIntervalMinutes = 2
+    // Notification interval in days for recurring follow-ups
+    private let notificationIntervalDays = 2
     
     // Delegate for UNUserNotificationCenter
     private override init() {
@@ -164,9 +163,9 @@ class NotificationManager: NSObject, ObservableObject {
             ]
             
             // Create a trigger for the next interval from the start date
-            // Using minutes for development purposes (will be changed to days)
-            let intervalMinutes = notificationIntervalMinutes * index
-            let triggerDate = Calendar.current.date(byAdding: .minute, value: intervalMinutes, to: startDate) ?? Date()
+            // Using days for production
+            let intervalDays = notificationIntervalDays * index
+            let triggerDate = Calendar.current.date(byAdding: .day, value: intervalDays, to: startDate) ?? Date()
             let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: triggerDate)
             let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
             

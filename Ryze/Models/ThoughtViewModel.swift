@@ -191,7 +191,7 @@ class ThoughtViewModel: ObservableObject {
                 
                 if thought.lastNotificationDate == nil || 
                    (thought.lastNotificationDate != nil && 
-                    Calendar.current.dateComponents([.minute], from: thought.lastNotificationDate!, to: now).minute ?? 0 > 10) {
+                    Calendar.current.dateComponents([.hour], from: thought.lastNotificationDate!, to: now).hour ?? 0 > 24) {
                     
                     print("[ViewModel] Detected passed deadline for thought: \(thought.id) - scheduling recurring notifications")
                     
