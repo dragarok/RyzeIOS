@@ -225,7 +225,7 @@ struct NewThoughtView: View {
             }
             
             // Add padding at the bottom for better scrolling
-            // Spacer(minLength: 100)
+            Spacer(minLength: 100)
         }
     }
     
@@ -316,7 +316,7 @@ struct NewThoughtView: View {
                 UIKitDatePicker(selection: $viewModel.selectedDeadline, minimumDate: Date())
                     .padding()
             }
-            .frame(height: 400)  // Fixed height to ensure it's properly sized
+            .frame(minHeight: 420)  // Fixed height to ensure it's properly sized
         }
     }
     
