@@ -225,7 +225,7 @@ struct NewThoughtView: View {
             }
             
             // Add padding at the bottom for better scrolling
-            Spacer(minLength: 100)
+            // Spacer(minLength: 100)
         }
     }
     
@@ -428,7 +428,7 @@ struct NewThoughtView: View {
             )
             
             // Add space at bottom to ensure buttons don't overlap content
-            Spacer(minLength: 100)
+            // Spacer(minLength: 100)
         }
     }
     
