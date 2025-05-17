@@ -15,6 +15,7 @@ struct ThoughtDetailView: View {
     @State private var showingResolveSheet = false
     @State private var showingDeleteConfirmation = false
     @State private var showOutcomeAnimation = false
+    @State private var showingEditSheet = false // New state for edit sheet
     @Namespace private var animation
     
     var body: some View {
@@ -167,17 +168,10 @@ struct ThoughtDetailView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     if !thought.isResolved {
                         HStack(spacing: 16) {
-                            // Edit button - now using NavigationLink
-                            NavigationLink {
-                                NewThoughtView(viewModel: viewModel)
-                                    .onAppear {
-                                        // Prepare the form for editing when the view appears
-                                        viewModel.prepareForEditing(thought)
-                                    }
-                                    .onDisappear {
-                                        // Reset form when navigating away
-                                        viewModel.resetForm()
-                                    }
+                            // Edit button - now using a regular Button instead of NavigationLink
+                            Button {
+                                // Show the edit sheet
+                                showingEditSheet = true
                             } label: {
                                 Image(systemName: "pencil")
                                     .foregroundColor(.blue)
@@ -210,6 +204,18 @@ struct ThoughtDetailView: View {
                         dismiss()
                     }
                 }
+            }
+            // Add sheet for editing thought
+            .sheet(isPresented: $showingEditSheet) {
+                NewThoughtView(viewModel: viewModel)
+                    .onAppear {
+                        // Prepare the form for editing when the view appears
+                        viewModel.prepareForEditing(thought)
+                    }
+                    .onDisappear {
+                        // Reset form when navigating away
+                        viewModel.resetForm()
+                    }
             }
             .sheet(isPresented: $showingResolveSheet) {
                 resolveView
